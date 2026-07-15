@@ -3,58 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Khaly Pro Vietlott - Premium Dev</title>
+<title>Khaly Pro Vietlott</title>
 <style>
-  :root { --bg: #090e1a; --card: #151d30; --accent: #00d4ff; --text: #e0e0e0; --vip: #ff3e3e; }
+  :root { --bg: #090e1a; --card: #151d30; --accent: #ff1744; --text: #e0e0e0; --win: #ffeb3b; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
   .container { max-width: 480px; margin: auto; }
   h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; }
-  
-  /* Thông báo lịch xổ */
-  .schedule-box { background: #1a2538; border: 1px solid var(--accent); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; color: var(--accent); font-weight: bold; }
-  
-  /* Nút chuyển đài */
   .tab-group { display: flex; gap: 10px; margin-bottom: 15px; }
-  .tab-btn { flex: 1; padding: 10px; background: #2a3a5a; border: none; color: #fff; border-radius: 6px; cursor: pointer; }
-  .tab-btn.active { background: var(--accent); color: #000; font-weight: bold; }
-  
+  .tab-btn { flex: 1; padding: 12px; background: #2a3a5a; border: none; color: #fff; border-radius: 6px; cursor: pointer; }
+  .tab-btn.active { background: var(--accent); color: #fff; font-weight: bold; }
   .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
   .predict-item { border-bottom: 1px solid #2a3a5a; padding: 10px 0; }
-  .vip-style { border: 1px solid var(--vip); padding: 10px; border-radius: 8px; background: #250a0a; }
-  .ball { width: 28px; height: 28px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
-  
+  .vip-style { border: 1px solid var(--accent); padding: 10px; border-radius: 8px; background: #250a0a; }
+  .ball { width: 28px; height: 28px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; margin: 2px; }
+  .ball.matched { background: var(--win); color: #000; border-color: var(--win); }
   input, textarea { background: #0c1220; border: 1px solid #2a3a5a; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 5px 0; }
   .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 8px 0; }
   .grid-6 input { background: #0c1220; border: 1px solid var(--accent); text-align: center; font-weight: bold; padding: 8px 0; border-radius: 6px; color: var(--accent); }
-  
-  button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; transition: 0.2s; }
-  .save { background: var(--accent); color: #000; }
+  button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; }
+  .save { background: var(--accent); color: #fff; }
   .delete { background: #2a3a5a; color: #aaa; }
   .btn-paste { background: #1a2538; color: #fff; border: 1px solid #2a3a5a; }
+  .win-tag { color: var(--win); font-weight: bold; font-size: 11px; display: block; }
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Khaly Pro Vietlott</h2>
-  <div id="schedule-display" class="schedule-box">Đang tải lịch...</div>
-  
+  <div id="schedule-box" style="background:#1a2538; border:1px solid var(--accent); padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; color:var(--accent); font-weight:bold;"></div>
   <div class="tab-group">
     <button id="btn-mega" class="tab-btn active" onclick="switchType('mega')">MEGA 6/45</button>
     <button id="btn-power" class="tab-btn" onclick="switchType('power')">POWER 6/55</button>
   </div>
-
   <div id="predict-list" class="box"></div>
-
   <div class="box">
-    <h4>⚙️ NHẬP LIỆU: <span id="label-type">MEGA 6/45</span></h4>
+    <h4>⚙️ NHẬP LIỆU</h4>
     <input type="date" id="date-picker">
     <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây..."></textarea>
     <button class="btn-paste" onclick="pasteNumbers()">📥 Dán nhanh</button>
     <div class="grid-6" id="inputs-6"></div>
-    <button class="save" onclick="saveData()">💾 Lưu kết quả</button>
+    <input type="number" id="input-bonus" placeholder="Số Bonus (Chỉ Power)" style="display:none; border-color:var(--accent); color:var(--accent);">
+    <button class="save" onclick="saveData()">💾 Lưu kết quả kỳ này</button>
     <button class="delete" onclick="deleteData()">🗑 Xoá ngày đã chọn</button>
   </div>
-
   <div class="box">
     <h4>📜 Lịch sử dữ liệu</h4>
     <div id="history-list" style="max-height: 250px; overflow-y: auto;"></div>
@@ -70,103 +61,97 @@ const db = firebase.firestore();
 
 let currentType = 'mega';
 document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
+const inputsDiv = document.getElementById("inputs-6");
+for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; input.placeholder="00"; inputsDiv.appendChild(input); }
 
 function updateSchedule() {
   const d = new Date().getDay();
-  const today = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"][d];
+  const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
   const isMega = [3, 5, 0].includes(d);
-  document.getElementById("schedule-display").innerText = `${today} (${isMega ? 'MEGA 6/45' : 'POWER 6/55'} xổ)`;
+  document.getElementById("schedule-box").innerText = `Hôm nay ${days[d]} - ${isMega ? 'MEGA 6/45' : 'POWER 6/55'} xổ`;
 }
+updateSchedule();
 
 function switchType(type) {
   currentType = type;
   document.getElementById("btn-mega").classList.toggle("active", type === 'mega');
   document.getElementById("btn-power").classList.toggle("active", type === 'power');
-  document.getElementById("label-type").innerText = type === 'mega' ? "MEGA 6/45" : "POWER 6/55";
+  document.getElementById("input-bonus").style.display = type === 'power' ? 'block' : 'none';
   loadData();
 }
-
-const inputsDiv = document.getElementById("inputs-6");
-for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; inputsDiv.appendChild(input); }
 
 function pasteNumbers() {
   let val = document.getElementById("pasteInput").value;
   let matches = val.match(/\d{2}/g) || [];
   document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => inp.value = matches[idx] ? parseInt(matches[idx]) : "");
+  if(currentType === 'power' && matches[6]) document.getElementById("input-bonus").value = parseInt(matches[6]);
 }
 
 async function saveData() {
   let date = document.getElementById("date-picker").value;
   let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
   if(inputs.length < 6) return alert("Nhập đủ 6 số!");
-  await db.collection("vietlott_" + currentType).doc(date).set({ numbers: inputs.sort((a,b)=>a-b) });
+  await db.collection("vietlott_" + currentType).doc(date).set({ numbers: inputs.sort((a,b)=>a-b), bonus: parseInt(document.getElementById("input-bonus").value || 0) });
   alert("💾 Lưu thành công!");
 }
 
 async function deleteData() {
   let date = document.getElementById("date-picker").value;
-  if(confirm("Xoá ngày " + date + "?")) await db.collection("vietlott_" + currentType).doc(date).delete();
+  if(confirm("Xoá ngày "+date+"?")) await db.collection("vietlott_" + currentType).doc(date).delete();
 }
 
-function generate(dataMap, sortedDates, targetIdx) {
-  let all = [], recent = [];
-  let history = sortedDates.slice(0, targetIdx);
-  if (history.length === 0) return null;
-  history.forEach(d => {
-    let n = dataMap[d].numbers || [];
-    all = all.concat(n);
-    if (history.slice(-10).includes(d)) recent = recent.concat(n);
-  });
-  let score = {};
-  for (let i = 1; i <= 45; i++) score[i] = ((all.filter(n=>n==i).length) * 0.4) + ((recent.filter(n=>n==i).length) * 1.6);
-  let aiSorted = Object.entries(score).sort((a, b) => b[1] - a[1]).map(item => parseInt(item[0]));
-  let finalPairs = [];
+function getPrize(count) {
+  if (count == 3) return "Trúng 3 số: 30.000đ";
+  if (count == 4) return "Trúng 4 số: 300.000đ";
+  if (count == 5) return "Trúng 5 số: 10.000.000đ";
+  return "";
+}
+
+function generate(dataMap, sortedDates) {
+  let all = []; sortedDates.forEach(d => all = all.concat(dataMap[d].numbers));
+  let score = {}; for(let i=1; i<=55; i++) score[i] = all.filter(n=>n==i).length;
+  let sorted = Object.keys(score).sort((a,b) => score[b] - score[a]);
+  let result = [];
   for(let i=0; i<6; i++) {
     let pair = [];
-    let seed = i;
-    while(pair.length < 6) {
-      let num = aiSorted[(seed++) % aiSorted.length];
-      if(!pair.includes(num)) pair.push(num);
-    }
-    finalPairs.push(pair.sort((a,b)=>a-b));
+    for(let j=0; j<6; j++) pair.push(parseInt(sorted[(i+j)%45]));
+    result.push(pair.sort((a,b)=>a-b));
   }
-  return finalPairs;
+  return result;
 }
 
 function loadData() {
   db.collection("vietlott_" + currentType).onSnapshot((snapshot) => {
-    let dataMap = {};
-    snapshot.forEach(doc => dataMap[doc.id] = doc.data());
-    let sortedDates = Object.keys(dataMap).sort();
-    
-    // Dự đoán
-    let preds = generate(dataMap, sortedDates, sortedDates.length);
+    let dataMap = {}, sortedDates = [];
+    snapshot.forEach(doc => { dataMap[doc.id] = doc.data(); sortedDates.push(doc.id); });
+    sortedDates.sort();
+
+    let preds = generate(dataMap, sortedDates);
     let html = "";
-    if(preds) {
-      preds.forEach((pair, idx) => {
-        let isVip = idx < 2;
-        html += `<div class="predict-item ${isVip ? 'vip-style' : ''}">
-          <div style="font-weight:bold; font-size:13px; color:${isVip ? '#ff3e3e' : '#aaa'}">${isVip ? '🔥 VIP '+(idx+1) : 'Cặp '+(idx+1)}:</div>
-          <div style="display:flex; gap:4px; margin-top:5px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
-        </div>`;
-      });
-    }
-    document.getElementById("predict-list").innerHTML = html || "<p>Chưa có dữ liệu!</p>";
-    
-    // Lịch sử
+    preds.forEach((pair, idx) => {
+      html += `<div class="predict-item ${idx<2?'vip-style':''}">
+        <div style="font-size:12px; margin-bottom:5px;">${idx<2?'🔥 VIP '+(idx+1):'Cặp '+(idx+1)}:</div>
+        <div style="display:flex; gap:3px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+      </div>`;
+    });
+    document.getElementById("predict-list").innerHTML = html;
+
     let histHtml = "";
     [...sortedDates].reverse().forEach(date => {
+      let d = dataMap[date];
+      let matchCount = d.numbers.filter(n => preds[0].includes(n)).length;
       histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
-        <div style="font-size:11px; color:#666;">📅 ${date}</div>
-        <div style="display:flex; gap:4px; margin-top:4px;">${dataMap[date].numbers.map(n => `<span class="ball" style="background:#0c1220; border:1px solid #444; color:#888; width:26px; height:26px;">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+        <div style="font-size:11px; color:#888;">📅 ${date} <span class="win-tag">${getPrize(matchCount)}</span></div>
+        <div style="display:flex; gap:4px; margin-top:4px;">
+          ${d.numbers.map(n => `<span class="ball ${preds[0].includes(n)?'matched':''}" style="width:26px; height:26px; font-size:11px;">${n.toString().padStart(2,'0')}</span>`).join('')}
+          ${d.bonus ? `<span class="ball" style="width:26px; height:26px; font-size:11px; border-color:#ff1744;">${d.bonus.toString().padStart(2,'0')}</span>` : ''}
+        </div>
       </div>`;
     });
     document.getElementById("history-list").innerHTML = histHtml;
   });
 }
-
-updateSchedule();
-loadData();
+switchType('mega');
 </script>
 </body>
 </html>
