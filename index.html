@@ -6,14 +6,21 @@
 <title>Khaly Pro Vietlott - Premium Dev</title>
 <style>
   :root { --bg: #090e1a; --card: #151d30; --accent: #00d4ff; --text: #e0e0e0; --vip: #ff3e3e; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 15px; margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
   .container { max-width: 480px; margin: auto; }
-  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; letter-spacing: 1px; }
+  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; }
   
-  .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  /* Thông báo lịch xổ */
+  .schedule-box { background: #1a2538; border: 1px solid var(--accent); padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 15px; color: var(--accent); font-weight: bold; }
+  
+  /* Nút chuyển đài */
+  .tab-group { display: flex; gap: 10px; margin-bottom: 15px; }
+  .tab-btn { flex: 1; padding: 10px; background: #2a3a5a; border: none; color: #fff; border-radius: 6px; cursor: pointer; }
+  .tab-btn.active { background: var(--accent); color: #000; font-weight: bold; }
+  
+  .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
   .predict-item { border-bottom: 1px solid #2a3a5a; padding: 10px 0; }
   .vip-style { border: 1px solid var(--vip); padding: 10px; border-radius: 8px; background: #250a0a; }
-  
   .ball { width: 28px; height: 28px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
   
   input, textarea { background: #0c1220; border: 1px solid #2a3a5a; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 5px 0; }
@@ -24,26 +31,32 @@
   .save { background: var(--accent); color: #000; }
   .delete { background: #2a3a5a; color: #aaa; }
   .btn-paste { background: #1a2538; color: #fff; border: 1px solid #2a3a5a; }
-  button:active { opacity: 0.8; transform: scale(0.98); }
 </style>
 </head>
 <body>
 <div class="container">
   <h2>Khaly Pro Vietlott</h2>
+  <div id="schedule-display" class="schedule-box">Đang tải lịch...</div>
+  
+  <div class="tab-group">
+    <button id="btn-mega" class="tab-btn active" onclick="switchType('mega')">MEGA 6/45</button>
+    <button id="btn-power" class="tab-btn" onclick="switchType('power')">POWER 6/55</button>
+  </div>
+
   <div id="predict-list" class="box"></div>
 
   <div class="box">
-    <h4 style="color:var(--accent); margin-top:0;">⚙️ NHẬP LIỆU THẬT</h4>
+    <h4>⚙️ NHẬP LIỆU: <span id="label-type">MEGA 6/45</span></h4>
     <input type="date" id="date-picker">
     <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây..."></textarea>
-    <button class="btn-paste" onclick="pasteVietlottNumbers()">📥 Dán nhanh</button>
+    <button class="btn-paste" onclick="pasteNumbers()">📥 Dán nhanh</button>
     <div class="grid-6" id="inputs-6"></div>
-    <button class="save" onclick="saveManualData()">💾 Lưu kết quả</button>
-    <button class="delete" onclick="deleteManualData()">🗑 Xoá ngày đã chọn</button>
+    <button class="save" onclick="saveData()">💾 Lưu kết quả</button>
+    <button class="delete" onclick="deleteData()">🗑 Xoá ngày đã chọn</button>
   </div>
 
   <div class="box">
-    <h4 style="color:var(--accent); margin-top:0;">📜 Lịch sử dữ liệu</h4>
+    <h4>📜 Lịch sử dữ liệu</h4>
     <div id="history-list" style="max-height: 250px; overflow-y: auto;"></div>
   </div>
 </div>
@@ -55,30 +68,44 @@ const firebaseConfig = { apiKey: "AIzaSyCT8UEFXvQEnr3j4tpH2SejMRsrVTUtHno", auth
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const inputsDiv = document.getElementById("inputs-6");
-for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; input.placeholder="00"; inputsDiv.appendChild(input); }
+let currentType = 'mega';
 document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
 
-function pasteVietlottNumbers() {
+function updateSchedule() {
+  const d = new Date().getDay();
+  const today = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"][d];
+  const isMega = [3, 5, 0].includes(d);
+  document.getElementById("schedule-display").innerText = `${today} (${isMega ? 'MEGA 6/45' : 'POWER 6/55'} xổ)`;
+}
+
+function switchType(type) {
+  currentType = type;
+  document.getElementById("btn-mega").classList.toggle("active", type === 'mega');
+  document.getElementById("btn-power").classList.toggle("active", type === 'power');
+  document.getElementById("label-type").innerText = type === 'mega' ? "MEGA 6/45" : "POWER 6/55";
+  loadData();
+}
+
+const inputsDiv = document.getElementById("inputs-6");
+for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; inputsDiv.appendChild(input); }
+
+function pasteNumbers() {
   let val = document.getElementById("pasteInput").value;
   let matches = val.match(/\d{2}/g) || [];
   document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => inp.value = matches[idx] ? parseInt(matches[idx]) : "");
 }
 
-async function saveManualData() {
+async function saveData() {
   let date = document.getElementById("date-picker").value;
   let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
   if(inputs.length < 6) return alert("Nhập đủ 6 số!");
-  await db.collection("vietlott_mega").doc(date).set({ numbers: inputs.sort((a,b)=>a-b) });
-  alert("💾 Đã lưu thành công!");
+  await db.collection("vietlott_" + currentType).doc(date).set({ numbers: inputs.sort((a,b)=>a-b) });
+  alert("💾 Lưu thành công!");
 }
 
-async function deleteManualData() {
+async function deleteData() {
   let date = document.getElementById("date-picker").value;
-  if(confirm("Xoá dữ liệu ngày " + date + "?")) {
-    await db.collection("vietlott_mega").doc(date).delete();
-    alert("🗑 Đã xóa!");
-  }
+  if(confirm("Xoá ngày " + date + "?")) await db.collection("vietlott_" + currentType).doc(date).delete();
 }
 
 function generate(dataMap, sortedDates, targetIdx) {
@@ -106,31 +133,40 @@ function generate(dataMap, sortedDates, targetIdx) {
   return finalPairs;
 }
 
-db.collection("vietlott_mega").onSnapshot((snapshot) => {
-  let dataMap = {};
-  snapshot.forEach(doc => dataMap[doc.id] = doc.data());
-  let sortedDates = Object.keys(dataMap).sort();
-  let preds = generate(dataMap, sortedDates, sortedDates.length);
-  let html = "";
-  if(preds) {
-    preds.forEach((pair, idx) => {
-      let isVip = idx < 2;
-      html += `<div class="predict-item ${isVip ? 'vip-style' : ''}">
-        <div style="font-weight:bold; font-size:13px; margin-bottom:5px; color:${isVip ? '#ff3e3e' : '#aaa'}">${isVip ? '🔥 VIP '+(idx+1) : 'Cặp '+(idx+1)}:</div>
-        <div style="display:flex; gap:4px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+function loadData() {
+  db.collection("vietlott_" + currentType).onSnapshot((snapshot) => {
+    let dataMap = {};
+    snapshot.forEach(doc => dataMap[doc.id] = doc.data());
+    let sortedDates = Object.keys(dataMap).sort();
+    
+    // Dự đoán
+    let preds = generate(dataMap, sortedDates, sortedDates.length);
+    let html = "";
+    if(preds) {
+      preds.forEach((pair, idx) => {
+        let isVip = idx < 2;
+        html += `<div class="predict-item ${isVip ? 'vip-style' : ''}">
+          <div style="font-weight:bold; font-size:13px; color:${isVip ? '#ff3e3e' : '#aaa'}">${isVip ? '🔥 VIP '+(idx+1) : 'Cặp '+(idx+1)}:</div>
+          <div style="display:flex; gap:4px; margin-top:5px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+        </div>`;
+      });
+    }
+    document.getElementById("predict-list").innerHTML = html || "<p>Chưa có dữ liệu!</p>";
+    
+    // Lịch sử
+    let histHtml = "";
+    [...sortedDates].reverse().forEach(date => {
+      histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
+        <div style="font-size:11px; color:#666;">📅 ${date}</div>
+        <div style="display:flex; gap:4px; margin-top:4px;">${dataMap[date].numbers.map(n => `<span class="ball" style="background:#0c1220; border:1px solid #444; color:#888; width:26px; height:26px;">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
       </div>`;
     });
-  }
-  document.getElementById("predict-list").innerHTML = html;
-  let histHtml = "";
-  [...sortedDates].reverse().forEach(date => {
-    histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
-      <div style="font-size:11px; color:#666;">📅 ${date}</div>
-      <div style="display:flex; gap:4px; margin-top:4px;">${dataMap[date].numbers.map(n => `<span class="ball" style="background:#0c1220; border:1px solid #444; color:#888; width:26px; height:26px;">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
-    </div>`;
+    document.getElementById("history-list").innerHTML = histHtml;
   });
-  document.getElementById("history-list").innerHTML = histHtml;
-});
+}
+
+updateSchedule();
+loadData();
 </script>
 </body>
 </html>
