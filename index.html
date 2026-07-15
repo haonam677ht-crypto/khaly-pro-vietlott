@@ -2,336 +2,110 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xổ Số Khaly PRO VIETLOTT</title>
-
+<title>Khaly Pro Vietlott - Premium</title>
 <style>
-body {
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background: linear-gradient(135deg, #0b132b, #1c2541, #3a506b);
-  background-attachment: fixed;
-  padding: 15px 10px;
-  font-size: 16px;
-  color: #f1f1f1;
-}
-.container {
-  max-width: 480px;
-  margin: auto;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 20px;
-  border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #333;
-}
-.inner-bg {
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-}
-h2 { 
-  text-align: center; 
-  font-size: 24px; 
-  color: #d32f2f; 
-  font-weight: 800;
-  text-transform: uppercase; 
-  margin-top: 0;
-  margin-bottom: 15px; 
-  letter-spacing: 1px;
-  background: linear-gradient(to right, #ff1744, #ff9100);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.schedule-alert {
-  background: linear-gradient(135deg, #fff3e0, #ffe082);
-  border: 2px solid #ffa000;
-  border-radius: 14px;
-  padding: 12px;
-  margin-bottom: 15px;
-  text-align: center;
-  font-weight: bold;
-  color: #b78103;
-  font-size: 15px;
-  box-shadow: 0 4px 15px rgba(255, 160, 0, 0.2);
-}
-.schedule-alert span {
-  color: #d84315;
-  font-size: 17px;
-  display: block;
-  margin-top: 4px;
-}
-
-.tabs { display: flex; gap: 8px; margin-bottom: 15px; }
-.tab-btn { 
-  flex: 1; 
-  padding: 12px; 
-  background: #f5f5f5; 
-  border: 1px solid #ddd;
-  border-radius: 12px; 
-  font-weight: bold; 
-  cursor: pointer; 
-  transition: all 0.3s ease;
-  font-size: 14px;
-  color: #555;
-}
-.tab-btn.active { 
-  background: linear-gradient(135deg, #d32f2f, #ff5252); 
-  color: white; 
-  border-color: transparent;
-  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
-}
-
-.auto-box { 
-  background: linear-gradient(135deg, #fffde7, #fff9c4); 
-  border: 2px solid #fbc02d; 
-  border-radius: 16px; 
-  padding: 15px; 
-  margin-bottom: 18px; 
-  box-shadow: 0 4px 12px rgba(251, 192, 45, 0.15);
-}
-.auto-box h4 { margin: 0 0 10px 0; color: #f57f17; text-align: center; font-size: 16px; letter-spacing: 0.5px; }
-
-.ball-container { display: flex; flex-wrap: wrap; gap: 6px; margin: 5px 0; justify-content: center; }
-.ball { 
-  width: 36px; 
-  height: 36px; 
-  border-radius: 50%; 
-  background: linear-gradient(135deg, #ff9100, #ff3d00); 
-  color: white; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-weight: bold; 
-  font-size: 15px; 
-  box-shadow: 0 4px 8px rgba(255, 61, 0, 0.3);
-}
-.ball.power-bonus { 
-  background: linear-gradient(135deg, #29b6f6, #0288d1); 
-  box-shadow: 0 4px 8px rgba(2, 136, 209, 0.3);
-}
-
-.predict-row { 
-  padding: 8px 12px; 
-  border-radius: 10px; 
-  margin-bottom: 8px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between;
-}
-.predict-label { font-size: 13px; font-weight: bold; min-width: 55px; }
-
-select, input { 
-  width: 100%; 
-  padding: 12px; 
-  margin: 6px 0; 
-  font-size: 16px; 
-  border: 1px solid #ddd; 
-  border-radius: 12px; 
-  box-sizing: border-box; 
-  background-color: #fafafa;
-}
-input:focus { border-color: #ff5252; outline: none; background-color: #fff; }
-
-button { 
-  padding: 14px; 
-  margin: 6px 0; 
-  border: none; 
-  border-radius: 12px; 
-  font-size: 16px; 
-  font-weight: bold; 
-  cursor: pointer; 
-  width: 100%; 
-  transition: transform 0.1s ease, box-shadow 0.2s ease;
-}
-button:active { transform: scale(0.98); }
-.save { 
-  background: linear-gradient(135deg, #2e7d32, #4caf50); 
-  color: white; 
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
-}
-.delete { 
-  background: linear-gradient(135deg, #c62828, #e53935); 
-  color: white; 
-}
-
-.grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 12px 0; }
-.grid-6 input { 
-  text-align: center; 
-  font-size: 18px; 
-  font-weight: bold; 
-  border: 2px solid #b3e5fc; 
-  padding: 10px 0; 
-  border-radius: 10px; 
-  margin: 0;
-}
-.bonus-input-box { 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between;
-  margin-top: 8px; 
-  background: #edf7ff; 
-  padding: 10px 12px; 
-  border-radius: 12px; 
-  border: 1px solid #b3e5fc;
-}
-
-.stat { 
-  background: #fcfcfc; 
-  padding: 15px; 
-  margin-top: 15px; 
-  border-radius: 16px; 
-  border-left: 5px solid #ff5252; 
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-.stat h4 { margin: 0 0 10px 0; font-size: 15px; color: #37474f; font-weight: 700; display: flex; align-items: center; gap: 5px; }
-
-.history-item { padding: 12px 0; border-bottom: 1px solid #edf2f7; }
-.history-item:last-child { border-bottom: none; }
-
-.win-tag { 
-  display: inline-block; 
-  padding: 4px 10px; 
-  border-radius: 8px; 
-  font-size: 12px; 
-  font-weight: bold; 
-  color: white; 
-  margin-top: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-.win-jackpot { background: linear-gradient(135deg, #d50000, #ff1744); }
-.win-g1 { background: linear-gradient(135deg, #ff6d00, #ffab40); }
-.win-g2 { background: linear-gradient(135deg, #2962ff, #2979ff); }
-.win-g3 { background: linear-gradient(135deg, #00c853, #b2ff59); color: #1b5e20; }
+  :root { --bg: #0a0a0a; --panel: #161616; --accent: #ff3e3e; --text: #e0e0e0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
+  .container { max-width: 480px; margin: auto; }
+  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; letter-spacing: 2px; }
+  
+  /* Khung bo viền đỏ mỏng hiện đại */
+  .box { 
+    background: var(--panel); border: 1px solid #333; padding: 20px; border-radius: 16px; 
+    margin-bottom: 20px; position: relative; border-left: 4px solid var(--accent);
+  }
+  
+  .predict-item { border-bottom: 1px solid #333; padding: 12px 0; }
+  .vip-style { border: 1px solid var(--accent); padding: 10px; border-radius: 10px; background: #200505; }
+  
+  .ball { width: 32px; height: 32px; background: #222; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; }
+  
+  input, textarea { background: #000; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 8px; width: 100%; box-sizing: border-box; margin: 8px 0; }
+  .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 10px 0; }
+  .grid-6 input { background: #000; border: 1px solid var(--accent); text-align: center; font-weight: bold; padding: 10px 0; border-radius: 8px; color: var(--accent); }
+  
+  button { padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; transition: 0.3s; }
+  .save { background: var(--accent); color: #fff; }
+  .delete { background: #333; color: #888; }
+  .btn-paste { background: #222; color: #fff; border: 1px solid #444; }
+  
+  h4 { color: var(--accent); margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; }
+  .history-item { padding: 10px 0; border-bottom: 1px solid #222; }
 </style>
 </head>
-
 <body>
 <div class="container">
-  <div class="inner-bg">
-    <h2>📊 KHALY PRO VIETLOTT</h2>
+  <h2>KHALY PRO VIETLOTT</h2>
+  <div id="predict-list" class="box"></div>
 
-    <div class="schedule-alert" id="today-schedule-box">
-      📅 Hôm nay là thứ mấy? <span>Đang tải...</span>
-    </div>
+  <div class="box">
+    <h4>⚙️ Tự Nhập Kết Quả Thật</h4>
+    <input type="date" id="date-picker">
+    <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây..."></textarea>
+    <button class="btn-paste" onclick="pasteVietlottNumbers()">📥 Dán nhanh dữ liệu</button>
+    <div class="grid-6" id="inputs-6"></div>
+    <button class="save" onclick="saveManualData()">💾 Lưu kết quả kỳ này</button>
+    <button class="delete" onclick="deleteManualData()">🗑 Xoá ngày đã chọn</button>
+  </div>
 
-    <div class="tabs">
-      <button id="tab-mega" class="tab-btn active" onclick="switchType('mega')">⚡ MEGA 6/45</button>
-      <button id="tab-power" class="tab-btn" onclick="switchType('power')">🔥 POWER 6/55</button>
-    </div>
-
-    <div class="auto-box">
-      <h4 id="predict-title">🔮 6 CẶP SỐ AI DỰ ĐOÁN HÔM NAY</h4>
-      <div id="predict-list">Đang tính toán cầu dữ liệu...</div>
-    </div>
-
-    <!-- KHU VỰC TỰ NHẬP LIỆU THẬT AN TOÀN -->
-    <div class="stat" style="border-left-color: #0277bd;">
-      <h4>⚙️ Tự Nhập Kết Quả Thật</h4>
-      <input type="date" id="date-picker">
-      <div class="grid-6" id="inputs-6"></div>
-      
-      <div id="power-bonus-area" class="bonus-input-box" style="display:none;">
-        <span style="font-size: 14px; font-weight: bold; color: #1565c0;">🔵 Số đặc biệt (Jackpot 2):</span>
-        <input type="number" id="input-bonus" style="width: 70px; margin: 0; padding: 6px; text-align: center;" min="1" max="55" placeholder="00">
-      </div>
-
-      <button class="save" onclick="saveManualData()">💾 Lưu kết quả kỳ này</button>
-      <button class="delete" onclick="deleteManualData()">🗑 Xoá ngày đã chọn</button>
-    </div>
-
-    <div class="stat" style="border-left-color: #00c853; background: #f9fffb;">
-      <h4>🏆 LỊCH SỬ DỮ LIỆU & BẢNG VÀNG AI</h4>
-      <div id="history-list" style="max-height: 380px; overflow-y: auto; font-size: 14px; line-height: 1.6;">
-        Chưa có dữ liệu lịch sử nào được nhập.
-      </div>
-    </div>
+  <div class="box">
+    <h4>📜 Lịch sử dữ liệu</h4>
+    <div id="history-list" style="max-height: 300px; overflow-y: auto;"></div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCT8UEFXvQEnr3j4tpH2SejMRsrVTUtHno",
-  authDomain: "xoso-1c0bc.firebaseapp.com",
-  projectId: "xoso-1c0bc",
-  storageBucket: "xoso-1c0bc.appspot.com",
-  messagingSenderId: "809250186083",
-  appId: "1:809250186083:web:f190681f03347c696fe956"
-};
-
+const firebaseConfig = { apiKey: "AIzaSyCT8UEFXvQEnr3j4tpH2SejMRsrVTUtHno", authDomain: "xoso-1c0bc.firebaseapp.com", projectId: "xoso-1c0bc", storageBucket: "xoso-1c0bc.appspot.com", messagingSenderId: "809250186083", appId: "1:809250186083:web:f190681f03347c696fe956" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let currentType = 'mega';
-let unsubscribeRealtime = null;
-
+// Khởi tạo các ô nhập
 const inputsDiv = document.getElementById("inputs-6");
-for(let i=0; i<6; i++){
-  let input = document.createElement("input");
-  input.type = "number";
-  input.placeholder = "00";
-  inputsDiv.appendChild(input);
-}
+for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; input.placeholder="00"; inputsDiv.appendChild(input); }
 document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
 
-function updateTodaySchedule() {
-  const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-  const today = new Date();
-  const dayName = days[today.getDay()];
-  const dayIndex = today.getDay();
-  let text = (dayIndex === 3 || dayIndex === 5 || dayIndex === 0) ? `Mega 6/45` : ((dayIndex === 2 || dayIndex === 4 || dayIndex === 6) ? `Power 6/55` : `Nghỉ xổ`);
-  document.getElementById("today-schedule-box").innerHTML = `📅 Hôm nay: <b>${dayName}</b> <span>💥 LỊCH XỔ: ${text.toUpperCase()} 💥</span>`;
+function pasteVietlottNumbers() {
+  let val = document.getElementById("pasteInput").value;
+  let matches = val.match(/\d{2}/g) || [];
+  document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => inp.value = matches[idx] ? parseInt(matches[idx]) : "");
 }
 
-function switchType(type) {
-  currentType = type;
-  document.getElementById("tab-mega").classList.toggle("active", type === 'mega');
-  document.getElementById("tab-power").classList.toggle("active", type === 'power');
-  document.getElementById("power-bonus-area").style.display = type === 'power' ? 'flex' : 'none';
-  document.getElementById("predict-title").innerText = `🔮 6 CẶP SỐ AI DỰ ĐOÁN ${type.toUpperCase()} HÔM NAY`;
-  listenToFirebaseRealtime();
+async function saveManualData() {
+  let date = document.getElementById("date-picker").value;
+  let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
+  if(inputs.length < 6) return alert("Nhập đủ 6 số!");
+  await db.collection("vietlott_mega").doc(date).set({ numbers: inputs.sort((a,b)=>a-b) });
+  alert("💾 Đã lưu thành công!");
 }
 
-function generatePredictionsFromData(dataMap, sortedDates, targetIdx) {
-  let maxNum = currentType === 'mega' ? 45 : 55;
-  let all = [], recentNumbers = [];
-  
-  let historyDates = sortedDates.slice(0, targetIdx);
-  if (historyDates.length === 0) return null;
-
-  let recentDates = historyDates.slice(-10);
-
-  historyDates.forEach(d => {
-    let nums = dataMap[d].numbers || [];
-    all = all.concat(nums);
-    if (recentDates.includes(d)) recentNumbers = recentNumbers.concat(nums);
-  });
-
-  let countAll = {}, countRecent = {}, score = {};
-  all.forEach(n => countAll[n] = (countAll[n] || 0) + 1);
-  recentNumbers.forEach(n => countRecent[n] = (countRecent[n] || 0) + 1);
-  
-  for (let i = 1; i <= maxNum; i++) {
-    score[i] = ((countAll[i] || 0) * 0.4) + ((countRecent[i] || 0) * 1.6);
+async function deleteManualData() {
+  let date = document.getElementById("date-picker").value;
+  if(confirm("Bạn muốn xóa dữ liệu ngày " + date + "?")) {
+    await db.collection("vietlott_mega").doc(date).delete();
+    alert("🗑 Đã xóa!");
   }
+}
 
-  let aiSorted = Object.entries(score).sort((a, b) => b[1] - a[1]);
+function generate(dataMap, sortedDates, targetIdx) {
+  let all = [], recent = [];
+  let history = sortedDates.slice(0, targetIdx);
+  if (history.length === 0) return null;
+  history.forEach(d => {
+    let n = dataMap[d].numbers || [];
+    all = all.concat(n);
+    if (history.slice(-10).includes(d)) recent = recent.concat(n);
+  });
+  let score = {};
+  for (let i = 1; i <= 45; i++) score[i] = ((all.filter(n=>n==i).length) * 0.4) + ((recent.filter(n=>n==i).length) * 1.6);
+  let aiSorted = Object.entries(score).sort((a, b) => b[1] - a[1]).map(item => parseInt(item[0]));
   let finalPairs = [];
-  let baseNumbers = aiSorted.map(item => parseInt(item[0])); 
-
-  if (baseNumbers.length < 6) return null;
-
   for(let i=0; i<6; i++) {
     let pair = [];
-    let seedIndex = i;
+    let seed = i;
     while(pair.length < 6) {
-      let num = baseNumbers[(seedIndex++) % baseNumbers.length];
+      let num = aiSorted[(seed++) % aiSorted.length];
       if(!pair.includes(num)) pair.push(num);
     }
     finalPairs.push(pair.sort((a,b)=>a-b));
@@ -339,125 +113,31 @@ function generatePredictionsFromData(dataMap, sortedDates, targetIdx) {
   return finalPairs;
 }
 
-async function saveManualData() {
-  let date = document.getElementById("date-picker").value;
-  if(!date) return alert("Chọn ngày!");
-  let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
-  if(inputs.length < 6) return alert("Hãy nhập đủ 6 số kết quả!");
-  
-  let dataPayload = { numbers: inputs.sort((a,b)=>a-b) };
-  if(currentType === 'power') {
-    let bonus = parseInt(document.getElementById("input-bonus").value);
-    if(isNaN(bonus)) return alert("Nhập số đặc biệt (Jackpot 2)!");
-    dataPayload.bonus = bonus;
-  }
-  
-  await db.collection(`vietlott_${currentType}`).doc(date).set(dataPayload);
-  alert("💾 Lưu dữ liệu Vietlott thành công!");
-  
-  document.querySelectorAll("#inputs-6 input").forEach(i => i.value = "");
-  if(currentType === 'power') document.getElementById("input-bonus").value = "";
-}
-
-async function deleteManualData() {
-  let date = document.getElementById("date-picker").value;
-  if(!date || !confirm(`Xoá dữ liệu ngày ${date}?`)) return;
-  await db.collection(`vietlott_${currentType}`).doc(date).delete();
-  alert("🗑 Đã xóa dữ liệu thành công.");
-}
-
-function checkWinning(predPair, officialNums, bonusNum, type) {
-  if (!officialNums) return null;
-  let matchCount = predPair.filter(n => officialNums.includes(n)).length;
-  if(type === 'mega') {
-    if(matchCount === 6) return { name: "JACKPOT", class: "win-jackpot" };
-    if(matchCount === 5) return { name: "GIẢI NHẤT", class: "win-g1" };
-    if(matchCount === 4) return { name: "GIẢI NHÌ", class: "win-g2" };
-    if(matchCount === 3) return { name: "GIẢI BA", class: "win-g3" };
-  } else {
-    if(matchCount === 6) return { name: "JACKPOT 1", class: "win-jackpot" };
-    if(matchCount === 5 && bonusNum && predPair.includes(bonusNum)) return { name: "JACKPOT 2", class: "win-jackpot" };
-    if(matchCount === 5) return { name: "GIẢI NHẤT", class: "win-g1" };
-    if(matchCount === 4) return { name: "GIẢI NHÌ", class: "win-g2" };
-    if(matchCount === 3) return { name: "GIẢI BA", class: "win-g3" };
-  }
-  return null;
-}
-
-function listenToFirebaseRealtime() {
-  if (unsubscribeRealtime) unsubscribeRealtime();
-
-  unsubscribeRealtime = db.collection(`vietlott_${currentType}`).onSnapshot((snapshot) => {
-    let dataMap = {};
-    snapshot.forEach(doc => { dataMap[doc.id] = doc.data(); });
-
-    let sortedDates = Object.keys(dataMap).sort();
-    let currentPredictions = generatePredictionsFromData(dataMap, sortedDates, sortedDates.length);
-    let predictHtml = "";
-    
-    if (currentPredictions) {
-      currentPredictions.forEach((pair, idx) => {
-        let isTopPick = idx < 2; 
-        let rowStyle = isTopPick 
-          ? `border: 2px solid #d32f2f; background: linear-gradient(135deg, #ffebee, #fff); box-shadow: 0 4px 10px rgba(211, 47, 47, 0.15);` 
-          : `border: 1px solid #ffe082; background: rgba(255,255,255,0.7);`;
-        let labelHtml = isTopPick 
-          ? `<span class="predict-label" style="color:#d32f2f; font-weight: bold;">🔥 VIP ${idx+1}:</span>` 
-          : `<span class="predict-label">Cặp ${idx+1}:</span>`;
-
-        predictHtml += `
-          <div class="predict-row" style="${rowStyle}">
-            ${labelHtml}
-            <div class="ball-container">
-              ${pair.map(n => `<span class="ball" style="${isTopPick ? 'background: linear-gradient(135deg, #d32f2f, #ff5252);' : ''}">${n.toString().padStart(2,'0')}</span>`).join('')}
-            </div>
-          </div>`;
-      });
-    } else {
-      predictHtml = "<div style='text-align:center;color:#b21f1f;font-weight:bold;padding:10px;'>⚠️ Firebase trống dữ liệu thật.<br><span style='font-size:13px;font-weight:normal;color:#666;'>Hãy tự nhập kết quả thật ở khung bên dưới để kích hoạt AI tính cầu.</span></div>";
-    }
-    document.getElementById("predict-list").innerHTML = predictHtml;
-
-    let displayDates = [...sortedDates].reverse();
-    let historyHtml = "";
-    
-    displayDates.forEach(date => {
-      let rec = dataMap[date];
-      let official = rec.numbers;
-      let bonus = rec.bonus || null;
-      
-      let originalIdx = sortedDates.indexOf(date);
-      let pastPredictions = generatePredictionsFromData(dataMap, sortedDates, originalIdx);
-      let winDetails = [];
-
-      if (pastPredictions) {
-        pastPredictions.forEach((predPair, i) => {
-          let winStatus = checkWinning(predPair, official, bonus, currentType);
-          if(winStatus) winDetails.push(`<span class="win-tag ${winStatus.class}">🎉 Cặp ${i+1} trúng ${winStatus.name}</span>`);
-        });
-      }
-
-      let resultStatusText = winDetails.length > 0 
-        ? `<div style="margin-top:5px; display:flex; flex-direction:column; gap:4px;">${winDetails.join('')}</div>`
-        : `<div style="margin-top:5px; color:#aaa; font-size:13px; font-style:italic;">❌ Kỳ này chưa ăn giải lớn</div>`;
-
-      historyHtml += `
-        <div class="history-item">
-          <div style="font-weight:bold; color:#1565c0;">📅 Kỳ quay: ${date}</div>
-          <div style="margin:5px 0; display:flex; align-items:center; gap:8px;">
-            <div class="ball-container">
-              ${official.map(n => `<span class="ball" style="background:linear-gradient(135deg, #4caf50, #2e7d32); width:30px; height:30px; font-size:13px;">${n.toString().padStart(2,'0')}</span>`).join('')}
-              ${bonus ? `<span class="ball power-bonus" style="width:30px; height:30px; font-size:13px;">${bonus.toString().padStart(2,'0')}</span>` : ''}
-            </div>
-          </div>
-          ${resultStatusText}
-        </div>`;
+db.collection("vietlott_mega").onSnapshot((snapshot) => {
+  let dataMap = {};
+  snapshot.forEach(doc => dataMap[doc.id] = doc.data());
+  let sortedDates = Object.keys(dataMap).sort();
+  let preds = generate(dataMap, sortedDates, sortedDates.length);
+  let html = "";
+  if(preds) {
+    preds.forEach((pair, idx) => {
+      let isVip = idx < 2;
+      html += `<div class="predict-item ${isVip ? 'vip-style' : ''}">
+        <div style="font-weight:bold; font-size:13px; margin-bottom:5px; color:${isVip ? '#ff3e3e' : '#aaa'}">${isVip ? '🔥 VIP '+(idx+1) : 'Cặp '+(idx+1)}:</div>
+        <div style="display:flex; gap:3px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+      </div>`;
     });
-    document.getElementById("history-list").innerHTML = historyHtml || "<div style='text-align:center;color:#666;font-style:italic;padding:15px;'>Firebase trống tinh khiết.<br>Sẵn sàng bám sát dữ liệu thật bạn nhập!</div>";
+  }
+  document.getElementById("predict-list").innerHTML = html;
+  let histHtml = "";
+  [...sortedDates].reverse().forEach(date => {
+    histHtml += `<div class="history-item">
+      <div style="font-size:11px; color:#666;">📅 ${date}</div>
+      <div style="display:flex; gap:3px; margin-top:4px;">${dataMap[date].numbers.map(n => `<span class="ball" style="background:#222; border:1px solid #555; color:#888; width:26px; height:26px;">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+    </div>`;
   });
-}
-
-window.onload = () => { updateTodaySchedule(); listenToFirebaseRealtime(); };
+  document.getElementById("history-list").innerHTML = histHtml;
+});
 </script>
 </body>
 </html>
