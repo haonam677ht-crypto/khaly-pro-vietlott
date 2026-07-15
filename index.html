@@ -2,78 +2,135 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<!-- THÊM VIEWPORT CHUẨN ĐỂ APP KHÔNG BỊ CO GIÃN SAI -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Khaly Pro Vietlott</title>
+<title>Khaly Pro Vietlott - Premium Dev</title>
 <style>
-  :root { --bg: #0a0a0a; --panel: #161616; --accent: #ff3e3e; --text: #e0e0e0; }
+  :root { --bg: #090e1a; --card: #151d30; --accent: #00d4ff; --text: #e0e0e0; --vip: #ff3e3e; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 15px; margin: 0; }
+  .container { max-width: 480px; margin: auto; }
+  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; letter-spacing: 1px; }
   
-  /* ÉP APP FULL MÀN HÌNH VÀ KHÔNG BỊ TRÀN */
-  html, body { 
-    margin: 0; padding: 0; 
-    height: 100%; width: 100%; 
-    background: var(--bg); 
-    color: var(--text); 
-    font-family: 'Segoe UI', sans-serif;
-    overflow: hidden; /* Chặn cuộn cả trang */
-  }
+  .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+  .predict-item { border-bottom: 1px solid #2a3a5a; padding: 10px 0; }
+  .vip-style { border: 1px solid var(--vip); padding: 10px; border-radius: 8px; background: #250a0a; }
   
-  .app-wrapper {
-    height: 100vh; width: 100vw;
-    display: flex; flex-direction: column;
-    overflow-y: auto; /* Chỉ cho phép cuộn nội dung bên trong */
-    padding: 10px; box-sizing: border-box;
-  }
-
-  .container { max-width: 480px; margin: auto; width: 100%; }
+  .ball { width: 28px; height: 28px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
   
-  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 15px; font-weight: 800; }
-  
-  .box { 
-    background: var(--panel); border: 1px solid #333; padding: 15px; border-radius: 16px; 
-    margin-bottom: 15px; border-left: 4px solid var(--accent);
-  }
-  
-  .predict-item { border-bottom: 1px solid #333; padding: 8px 0; }
-  .ball { width: 28px; height: 28px; background: #222; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
-  
-  input, textarea { background: #000; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 8px; width: 100%; box-sizing: border-box; }
+  input, textarea { background: #0c1220; border: 1px solid #2a3a5a; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 5px 0; }
   .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 8px 0; }
-  .grid-6 input { background: #000; border: 1px solid var(--accent); text-align: center; color: var(--accent); font-weight: bold; padding: 8px 0; }
+  .grid-6 input { background: #0c1220; border: 1px solid var(--accent); text-align: center; font-weight: bold; padding: 8px 0; border-radius: 6px; color: var(--accent); }
   
-  button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; }
-  .save { background: var(--accent); color: #fff; }
-  .delete { background: #333; color: #888; }
-  .btn-paste { background: #222; color: #fff; border: 1px solid #444; }
+  button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; transition: 0.2s; }
+  .save { background: var(--accent); color: #000; }
+  .delete { background: #2a3a5a; color: #aaa; }
+  .btn-paste { background: #1a2538; color: #fff; border: 1px solid #2a3a5a; }
+  button:active { opacity: 0.8; transform: scale(0.98); }
 </style>
 </head>
 <body>
-<div class="app-wrapper">
-  <div class="container">
-    <h2>KHALY PRO VIETLOTT</h2>
-    <div id="predict-list" class="box"></div>
+<div class="container">
+  <h2>Khaly Pro Vietlott</h2>
+  <div id="predict-list" class="box"></div>
 
-    <div class="box">
-      <h4>⚙️ Tự Nhập Kết Quả</h4>
-      <input type="date" id="date-picker">
-      <textarea id="pasteInput" placeholder="Dán chuỗi số..."></textarea>
-      <button class="btn-paste" onclick="pasteVietlottNumbers()">📥 Dán nhanh</button>
-      <div class="grid-6" id="inputs-6"></div>
-      <button class="save" onclick="saveManualData()">💾 Lưu</button>
-      <button class="delete" onclick="deleteManualData()">🗑 Xoá</button>
-    </div>
+  <div class="box">
+    <h4 style="color:var(--accent); margin-top:0;">⚙️ NHẬP LIỆU THẬT</h4>
+    <input type="date" id="date-picker">
+    <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây..."></textarea>
+    <button class="btn-paste" onclick="pasteVietlottNumbers()">📥 Dán nhanh</button>
+    <div class="grid-6" id="inputs-6"></div>
+    <button class="save" onclick="saveManualData()">💾 Lưu kết quả</button>
+    <button class="delete" onclick="deleteManualData()">🗑 Xoá ngày đã chọn</button>
+  </div>
 
-    <div class="box">
-      <h4>📜 Lịch sử</h4>
-      <div id="history-list"></div>
-    </div>
+  <div class="box">
+    <h4 style="color:var(--accent); margin-top:0;">📜 Lịch sử dữ liệu</h4>
+    <div id="history-list" style="max-height: 250px; overflow-y: auto;"></div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <script>
-  // ... (Giữ nguyên logic JavaScript cũ của bạn tại đây)
+const firebaseConfig = { apiKey: "AIzaSyCT8UEFXvQEnr3j4tpH2SejMRsrVTUtHno", authDomain: "xoso-1c0bc.firebaseapp.com", projectId: "xoso-1c0bc", storageBucket: "xoso-1c0bc.appspot.com", messagingSenderId: "809250186083", appId: "1:809250186083:web:f190681f03347c696fe956" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const inputsDiv = document.getElementById("inputs-6");
+for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; input.placeholder="00"; inputsDiv.appendChild(input); }
+document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
+
+function pasteVietlottNumbers() {
+  let val = document.getElementById("pasteInput").value;
+  let matches = val.match(/\d{2}/g) || [];
+  document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => inp.value = matches[idx] ? parseInt(matches[idx]) : "");
+}
+
+async function saveManualData() {
+  let date = document.getElementById("date-picker").value;
+  let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
+  if(inputs.length < 6) return alert("Nhập đủ 6 số!");
+  await db.collection("vietlott_mega").doc(date).set({ numbers: inputs.sort((a,b)=>a-b) });
+  alert("💾 Đã lưu thành công!");
+}
+
+async function deleteManualData() {
+  let date = document.getElementById("date-picker").value;
+  if(confirm("Xoá dữ liệu ngày " + date + "?")) {
+    await db.collection("vietlott_mega").doc(date).delete();
+    alert("🗑 Đã xóa!");
+  }
+}
+
+function generate(dataMap, sortedDates, targetIdx) {
+  let all = [], recent = [];
+  let history = sortedDates.slice(0, targetIdx);
+  if (history.length === 0) return null;
+  history.forEach(d => {
+    let n = dataMap[d].numbers || [];
+    all = all.concat(n);
+    if (history.slice(-10).includes(d)) recent = recent.concat(n);
+  });
+  let score = {};
+  for (let i = 1; i <= 45; i++) score[i] = ((all.filter(n=>n==i).length) * 0.4) + ((recent.filter(n=>n==i).length) * 1.6);
+  let aiSorted = Object.entries(score).sort((a, b) => b[1] - a[1]).map(item => parseInt(item[0]));
+  let finalPairs = [];
+  for(let i=0; i<6; i++) {
+    let pair = [];
+    let seed = i;
+    while(pair.length < 6) {
+      let num = aiSorted[(seed++) % aiSorted.length];
+      if(!pair.includes(num)) pair.push(num);
+    }
+    finalPairs.push(pair.sort((a,b)=>a-b));
+  }
+  return finalPairs;
+}
+
+db.collection("vietlott_mega").onSnapshot((snapshot) => {
+  let dataMap = {};
+  snapshot.forEach(doc => dataMap[doc.id] = doc.data());
+  let sortedDates = Object.keys(dataMap).sort();
+  let preds = generate(dataMap, sortedDates, sortedDates.length);
+  let html = "";
+  if(preds) {
+    preds.forEach((pair, idx) => {
+      let isVip = idx < 2;
+      html += `<div class="predict-item ${isVip ? 'vip-style' : ''}">
+        <div style="font-weight:bold; font-size:13px; margin-bottom:5px; color:${isVip ? '#ff3e3e' : '#aaa'}">${isVip ? '🔥 VIP '+(idx+1) : 'Cặp '+(idx+1)}:</div>
+        <div style="display:flex; gap:4px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+  document.getElementById("predict-list").innerHTML = html;
+  let histHtml = "";
+  [...sortedDates].reverse().forEach(date => {
+    histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
+      <div style="font-size:11px; color:#666;">📅 ${date}</div>
+      <div style="display:flex; gap:4px; margin-top:4px;">${dataMap[date].numbers.map(n => `<span class="ball" style="background:#0c1220; border:1px solid #444; color:#888; width:26px; height:26px;">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+    </div>`;
+  });
+  document.getElementById("history-list").innerHTML = histHtml;
+});
 </script>
 </body>
 </html>
