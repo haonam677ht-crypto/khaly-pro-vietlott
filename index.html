@@ -110,11 +110,9 @@ function getPrize(count) {
   return "";
 }
 
-// THUẬT TOÁN QUÉT TOÀN BỘ DỮ LIỆU ĐỂ TÌM TOP TẦN SUẤT
 function generate(dataMap, sortedDates) {
   let posFreq = [{}, {}, {}, {}, {}, {}];
 
-  // Sử dụng toàn bộ lịch sử (không lọc theo ngày)
   sortedDates.forEach(d => {
     let numbers = dataMap[d].numbers;
     if(numbers && numbers.length === 6) {
@@ -124,7 +122,6 @@ function generate(dataMap, sortedDates) {
     }
   });
 
-  // Tìm các số hay về nhất ở từng vị trí
   let topAtPos = [];
   for(let i = 0; i < 6; i++) {
     let score = posFreq[i];
@@ -135,7 +132,6 @@ function generate(dataMap, sortedDates) {
   }
 
   let result = [];
-  // Xuất đúng 2 vé VIP
   for(let i = 0; i < 2; i++) {
     let pair = [];
     
@@ -148,14 +144,12 @@ function generate(dataMap, sortedDates) {
         num = availableNums[targetIdx];
         
         let offset = 1;
-        // Chống lặp số trong cùng 1 vé
         while (pair.includes(num) && offset < availableNums.length) {
             num = availableNums[(targetIdx + offset) % availableNums.length];
             offset++;
         }
       }
 
-      // Nếu chưa nhập dữ liệu hoặc trùng, lấy số ngẫu nhiên theo khung vị trí
       if (!num || pair.includes(num)) {
         let maxLimit = currentType === 'mega' ? 45 : 55;
         let step = Math.floor(maxLimit / 6);
@@ -198,12 +192,23 @@ function loadData() {
     let histHtml = "";
     [...sortedDates].reverse().forEach(date => {
       let d = dataMap[date];
-      let matchCount = Math.max(...preds.map(p => d.numbers.filter(n => p.includes(n)).length));
+      
+      // Tính số lượng trúng của từng vé VIP
+      let matchCounts = preds.map(p => d.numbers.filter(n => p.includes(n)).length);
+      
+      // Tìm vé trúng cao nhất
+      let matchCount = Math.max(...matchCounts);
+      
+      // Xác định xem vé VIP nào trúng nhiều nhất để làm chuẩn tô màu
+      let bestTicketIndex = matchCounts.indexOf(matchCount);
+      let bestTicket = preds[bestTicketIndex] || [];
+
       histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
         <div style="font-size:11px; color:#888;">📅 ${date} <span class="win-tag">${getPrize(matchCount)}</span></div>
         <div style="display:flex; gap:4px; margin-top:4px;">
           ${d.numbers.map(n => {
-            let isMatched = preds.some(p => p.includes(n));
+            // Chỉ tô màu nếu con số đó nằm trong vé VIP trúng cao nhất
+            let isMatched = bestTicket.includes(n);
             return `<span class="ball ${isMatched ? 'matched' : ''}" style="width:26px; height:26px; font-size:11px;">${n.toString().padStart(2,'0')}</span>`;
           }).join('')}
           ${d.bonus ? `<span class="ball" style="width:26px; height:26px; font-size:11px; border-color:#ff1744;">${d.bonus.toString().padStart(2,'0')}</span>` : ''}
