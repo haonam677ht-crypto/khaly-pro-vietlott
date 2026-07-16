@@ -14,8 +14,8 @@
   .tab-btn.active { background: var(--accent); color: #fff; font-weight: bold; }
   .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
   .predict-item { border-bottom: 1px solid #2a3a5a; padding: 10px 0; }
-  .vip-style { border: 1px solid var(--accent); padding: 10px; border-radius: 8px; background: #250a0a; }
-  .ball { width: 28px; height: 28px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; margin: 2px; }
+  .vip-style { border: 1px solid var(--accent); padding: 12px; border-radius: 8px; background: #250a0a; margin-bottom: 10px;}
+  .ball { width: 30px; height: 30px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin: 2px; }
   .ball.matched { background: var(--win); color: #000; border-color: var(--win); }
   input, textarea { background: #0c1220; border: 1px solid #2a3a5a; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 5px 0; }
   .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 8px 0; }
@@ -35,7 +35,9 @@
     <button id="btn-mega" class="tab-btn active" onclick="switchType('mega')">MEGA 6/45</button>
     <button id="btn-power" class="tab-btn" onclick="switchType('power')">POWER 6/55</button>
   </div>
+  
   <div id="predict-list" class="box"></div>
+
   <div class="box">
     <h4>⚙️ NHẬP LIỆU</h4>
     <input type="date" id="date-picker">
@@ -104,19 +106,75 @@ function getPrize(count) {
   if (count == 3) return "Trúng 3 số: 30.000đ";
   if (count == 4) return "Trúng 4 số: 300.000đ";
   if (count == 5) return "Trúng 5 số: 10.000.000đ";
+  if (count == 6) return "Jackpot!";
   return "";
 }
 
+// THUẬT TOÁN QUÉT TOÀN BỘ DỮ LIỆU ĐỂ TÌM TOP TẦN SUẤT
 function generate(dataMap, sortedDates) {
-  let all = []; sortedDates.forEach(d => all = all.concat(dataMap[d].numbers));
-  let score = {}; for(let i=1; i<=55; i++) score[i] = all.filter(n=>n==i).length;
-  let sorted = Object.keys(score).sort((a,b) => score[b] - score[a]);
-  let result = [];
-  for(let i=0; i<6; i++) {
-    let pair = [];
-    for(let j=0; j<6; j++) pair.push(parseInt(sorted[(i+j)%45]));
-    result.push(pair.sort((a,b)=>a-b));
+  let posFreq = [{}, {}, {}, {}, {}, {}];
+
+  // Sử dụng toàn bộ lịch sử (không lọc theo ngày)
+  sortedDates.forEach(d => {
+    let numbers = dataMap[d].numbers;
+    if(numbers && numbers.length === 6) {
+      numbers.forEach((num, idx) => {
+        posFreq[idx][num] = (posFreq[idx][num] || 0) + 1;
+      });
+    }
+  });
+
+  // Tìm các số hay về nhất ở từng vị trí
+  let topAtPos = [];
+  for(let i = 0; i < 6; i++) {
+    let score = posFreq[i];
+    let sortedNums = Object.keys(score)
+      .sort((a,b) => score[b] - score[a])
+      .map(Number);
+    topAtPos.push(sortedNums);
   }
+
+  let result = [];
+  // Xuất đúng 2 vé VIP
+  for(let i = 0; i < 2; i++) {
+    let pair = [];
+    
+    for(let pos = 0; pos < 6; pos++) {
+      let availableNums = topAtPos[pos];
+      let num;
+      
+      if (availableNums.length > 0) {
+        let targetIdx = i % availableNums.length;
+        num = availableNums[targetIdx];
+        
+        let offset = 1;
+        // Chống lặp số trong cùng 1 vé
+        while (pair.includes(num) && offset < availableNums.length) {
+            num = availableNums[(targetIdx + offset) % availableNums.length];
+            offset++;
+        }
+      }
+
+      // Nếu chưa nhập dữ liệu hoặc trùng, lấy số ngẫu nhiên theo khung vị trí
+      if (!num || pair.includes(num)) {
+        let maxLimit = currentType === 'mega' ? 45 : 55;
+        let step = Math.floor(maxLimit / 6);
+        let minVal = pos * step + 1;
+        let maxVal = (pos + 1) * step;
+        if (pos === 5) maxVal = maxLimit;
+
+        do {
+            num = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
+        } while (pair.includes(num));
+      }
+
+      pair.push(num);
+    }
+
+    pair.sort((a,b) => a-b);
+    result.push(pair);
+  }
+  
   return result;
 }
 
@@ -128,10 +186,11 @@ function loadData() {
 
     let preds = generate(dataMap, sortedDates);
     let html = "";
+    
     preds.forEach((pair, idx) => {
-      html += `<div class="predict-item ${idx<2?'vip-style':''}">
-        <div style="font-size:12px; margin-bottom:5px;">${idx<2?'🔥 VIP '+(idx+1):'Cặp '+(idx+1)}:</div>
-        <div style="display:flex; gap:3px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
+      html += `<div class="predict-item vip-style">
+        <div style="font-size:14px; margin-bottom:8px; font-weight:bold;">🔥 VIP ${idx + 1}:</div>
+        <div style="display:flex; gap:5px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
       </div>`;
     });
     document.getElementById("predict-list").innerHTML = html;
@@ -139,11 +198,14 @@ function loadData() {
     let histHtml = "";
     [...sortedDates].reverse().forEach(date => {
       let d = dataMap[date];
-      let matchCount = d.numbers.filter(n => preds[0].includes(n)).length;
+      let matchCount = Math.max(...preds.map(p => d.numbers.filter(n => p.includes(n)).length));
       histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
         <div style="font-size:11px; color:#888;">📅 ${date} <span class="win-tag">${getPrize(matchCount)}</span></div>
         <div style="display:flex; gap:4px; margin-top:4px;">
-          ${d.numbers.map(n => `<span class="ball ${preds[0].includes(n)?'matched':''}" style="width:26px; height:26px; font-size:11px;">${n.toString().padStart(2,'0')}</span>`).join('')}
+          ${d.numbers.map(n => {
+            let isMatched = preds.some(p => p.includes(n));
+            return `<span class="ball ${isMatched ? 'matched' : ''}" style="width:26px; height:26px; font-size:11px;">${n.toString().padStart(2,'0')}</span>`;
+          }).join('')}
           ${d.bonus ? `<span class="ball" style="width:26px; height:26px; font-size:11px; border-color:#ff1744;">${d.bonus.toString().padStart(2,'0')}</span>` : ''}
         </div>
       </div>`;
