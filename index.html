@@ -13,6 +13,7 @@
   .tab-btn { flex: 1; padding: 12px; background: #2a3a5a; border: none; color: #fff; border-radius: 6px; cursor: pointer; }
   .tab-btn.active { background: var(--accent); color: #fff; font-weight: bold; }
   .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
+  h4 { margin-top: 0; margin-bottom: 15px; text-transform: uppercase; color: #aaa; font-size: 13px; }
   .predict-item { border-bottom: 1px solid #2a3a5a; padding: 10px 0; }
   .vip-style { border: 1px solid var(--accent); padding: 12px; border-radius: 8px; background: #250a0a; margin-bottom: 10px;}
   .ball { width: 30px; height: 30px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin: 2px; }
@@ -31,26 +32,30 @@
 <div class="container">
   <h2>Khaly Pro Vietlott</h2>
   <div id="schedule-box" style="background:#1a2538; border:1px solid var(--accent); padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; color:var(--accent); font-weight:bold;"></div>
+  
   <div class="tab-group">
     <button id="btn-mega" class="tab-btn active" onclick="switchType('mega')">MEGA 6/45</button>
     <button id="btn-power" class="tab-btn" onclick="switchType('power')">POWER 6/55</button>
   </div>
   
   <div id="predict-list" class="box"></div>
+  
+  <div id="cold-list-container"></div>
 
   <div class="box">
     <h4>⚙️ NHẬP LIỆU</h4>
     <input type="date" id="date-picker">
-    <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây..."></textarea>
+    <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây... (Ví dụ: 02 15 24 33 40 45)"></textarea>
     <button class="btn-paste" onclick="pasteNumbers()">📥 Dán nhanh</button>
     <div class="grid-6" id="inputs-6"></div>
     <input type="number" id="input-bonus" placeholder="Số Bonus (Chỉ Power)" style="display:none; border-color:var(--accent); color:var(--accent);">
     <button class="save" onclick="saveData()">💾 Lưu kết quả kỳ này</button>
     <button class="delete" onclick="deleteData()">🗑 Xoá ngày đã chọn</button>
   </div>
+  
   <div class="box">
-    <h4>📜 Lịch sử dữ liệu</h4>
-    <div id="history-list" style="max-height: 250px; overflow-y: auto;"></div>
+    <h4>📜 LỊCH SỬ DỮ LIỆU & KIỂM ĐỊNH AI</h4>
+    <div id="history-list" style="max-height: 350px; overflow-y: auto;"></div>
   </div>
 </div>
 
@@ -84,9 +89,20 @@ function switchType(type) {
 
 function pasteNumbers() {
   let val = document.getElementById("pasteInput").value;
-  let matches = val.match(/\d{2}/g) || [];
-  document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => inp.value = matches[idx] ? parseInt(matches[idx]) : "");
-  if(currentType === 'power' && matches[6]) document.getElementById("input-bonus").value = parseInt(matches[6]);
+  // Regex tách lấy các cụm số nguyên (xử lý được cả chuỗi dính liền hoặc phân cách bằng dấu/cách)
+  let parts = val.match(/\d+/g) || [];
+  let matches = [];
+  parts.forEach(p => {
+     if(p.length > 2) matches.push(...p.match(/\d{2}/g) || []);
+     else matches.push(p);
+  });
+  
+  document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => {
+     inp.value = matches[idx] ? parseInt(matches[idx]) : "";
+  });
+  if(currentType === 'power' && matches[6]) {
+     document.getElementById("input-bonus").value = parseInt(matches[6]);
+  }
 }
 
 async function saveData() {
@@ -102,14 +118,23 @@ async function deleteData() {
   if(confirm("Xoá ngày "+date+"?")) await db.collection("vietlott_" + currentType).doc(date).delete();
 }
 
-function getPrize(count) {
-  if (count == 3) return "Trúng 3 số: 30.000đ";
-  if (count == 4) return "Trúng 4 số: 300.000đ";
-  if (count == 5) return "Trúng 5 số: 10.000.000đ";
-  if (count == 6) return "Jackpot!";
+function getPrize(count, isJP2) {
+  if (currentType === 'mega') {
+    if (count == 3) return "Trúng 3 số (30k)";
+    if (count == 4) return "Trúng 4 số (300k)";
+    if (count == 5) return "Trúng 5 số (10Tr)";
+    if (count == 6) return "JACKPOT!";
+  } else {
+    if (count == 3) return "Trúng 3 số (50k)";
+    if (count == 4) return "Trúng 4 số (500k)";
+    if (count == 5 && !isJP2) return "Trúng 5 số (40Tr)";
+    if (count == 5 && isJP2) return "JACKPOT 2! 🏆";
+    if (count == 6) return "JACKPOT 1! 👑";
+  }
   return "";
 }
 
+// Logic tạo vé dự đoán
 function generate(dataMap, sortedDates) {
   let posFreq = [{}, {}, {}, {}, {}, {}];
 
@@ -125,51 +150,62 @@ function generate(dataMap, sortedDates) {
   let topAtPos = [];
   for(let i = 0; i < 6; i++) {
     let score = posFreq[i];
-    let sortedNums = Object.keys(score)
-      .sort((a,b) => score[b] - score[a])
-      .map(Number);
+    let sortedNums = Object.keys(score).sort((a,b) => score[b] - score[a]).map(Number);
     topAtPos.push(sortedNums);
   }
 
   let result = [];
   for(let i = 0; i < 2; i++) {
     let pair = [];
-    
     for(let pos = 0; pos < 6; pos++) {
       let availableNums = topAtPos[pos];
       let num;
-      
       if (availableNums.length > 0) {
         let targetIdx = i % availableNums.length;
         num = availableNums[targetIdx];
-        
         let offset = 1;
         while (pair.includes(num) && offset < availableNums.length) {
             num = availableNums[(targetIdx + offset) % availableNums.length];
             offset++;
         }
       }
-
       if (!num || pair.includes(num)) {
         let maxLimit = currentType === 'mega' ? 45 : 55;
         let step = Math.floor(maxLimit / 6);
         let minVal = pos * step + 1;
         let maxVal = (pos + 1) * step;
         if (pos === 5) maxVal = maxLimit;
-
         do {
             num = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
         } while (pair.includes(num));
       }
-
       pair.push(num);
     }
-
     pair.sort((a,b) => a-b);
     result.push(pair);
   }
-  
   return result;
+}
+
+// Logic tìm Số Gan (Cold Numbers)
+function getColdNumbers(dataMap, sortedDates) {
+   let maxLimit = currentType === 'mega' ? 45 : 55;
+   let lastSeen = {};
+   for(let i = 1; i <= maxLimit; i++) lastSeen[i] = -1;
+   
+   sortedDates.forEach((d, idx) => {
+      let numbers = dataMap[d].numbers || [];
+      numbers.forEach(n => { lastSeen[n] = idx; });
+   });
+   
+   let totalDraws = sortedDates.length;
+   let coldArr = [];
+   for(let i = 1; i <= maxLimit; i++) {
+      let gap = lastSeen[i] === -1 ? totalDraws : (totalDraws - 1 - lastSeen[i]);
+      coldArr.push({ num: i, gap: gap });
+   }
+   coldArr.sort((a,b) => b.gap - a.gap);
+   return coldArr.slice(0, 5);
 }
 
 function loadData() {
@@ -178,10 +214,10 @@ function loadData() {
     snapshot.forEach(doc => { dataMap[doc.id] = doc.data(); sortedDates.push(doc.id); });
     sortedDates.sort();
 
-    let preds = generate(dataMap, sortedDates);
+    // 1. DỰ ĐOÁN HÔM NAY (Dùng toàn bộ dữ liệu đến hiện tại)
+    let currentPreds = generate(dataMap, sortedDates);
     let html = "";
-    
-    preds.forEach((pair, idx) => {
+    currentPreds.forEach((pair, idx) => {
       html += `<div class="predict-item vip-style">
         <div style="font-size:14px; margin-bottom:8px; font-weight:bold;">🔥 VIP ${idx + 1}:</div>
         <div style="display:flex; gap:5px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
@@ -189,29 +225,56 @@ function loadData() {
     });
     document.getElementById("predict-list").innerHTML = html;
 
-    let histHtml = "";
-    [...sortedDates].reverse().forEach(date => {
-      let d = dataMap[date];
-      
-      // Tính số lượng trúng của từng vé VIP
-      let matchCounts = preds.map(p => d.numbers.filter(n => p.includes(n)).length);
-      
-      // Tìm vé trúng cao nhất
-      let matchCount = Math.max(...matchCounts);
-      
-      // Xác định xem vé VIP nào trúng nhiều nhất để làm chuẩn tô màu
-      let bestTicketIndex = matchCounts.indexOf(matchCount);
-      let bestTicket = preds[bestTicketIndex] || [];
+    // 2. RENDER SỐ GAN
+    let coldNums = getColdNumbers(dataMap, sortedDates);
+    let coldHtml = `<div class="box"><h4>❄️ TOP 5 SỐ GAN (LÂU CHƯA VỀ)</h4>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">`;
+    coldNums.forEach(c => {
+       coldHtml += `<div style="text-align:center;">
+          <span class="ball" style="background:#0c1220; border-color:#888; color:#888;">${c.num.toString().padStart(2,'0')}</span>
+          <div style="font-size:10px; color:#aaa; margin-top:4px;">${c.gap} kỳ</div>
+       </div>`;
+    });
+    coldHtml += `</div></div>`;
+    document.getElementById("cold-list-container").innerHTML = coldHtml;
 
+    // 3. KIỂM ĐỊNH LỊCH SỬ (Khắc phục "Du hành thời gian" & Logic JP2)
+    let histHtml = "";
+    [...sortedDates].reverse().forEach((date) => {
+      let actualData = dataMap[date];
+      
+      // Chỉ lấy dữ liệu TRƯỚC ngày đang xét để AI dự đoán
+      let pastDates = sortedDates.filter(d => d < date);
+      let pastPreds = pastDates.length > 0 ? generate(dataMap, pastDates) : [];
+      
+      let matchCounts = pastPreds.map(predBalls => {
+          let count = actualData.numbers.filter(n => predBalls.includes(n)).length;
+          let isJP2 = false;
+          // Logic Jackpot 2 (Power 6/55): Trúng 5 bóng + Quả còn lại của vé trùng Bonus
+          if (currentType === 'power' && count === 5) {
+              let unmatchedUserBalls = predBalls.filter(n => !actualData.numbers.includes(n));
+              if (unmatchedUserBalls.includes(actualData.bonus)) isJP2 = true;
+          }
+          return { count: count, isJP2: isJP2, userBalls: predBalls };
+      });
+      
+      // Chọn vé dự đoán khớp tốt nhất của AI ngày hôm đó
+      let bestTicketObj = matchCounts.reduce((max, current) => {
+          if(current.count > max.count) return current;
+          if(current.count === max.count && current.isJP2) return current;
+          return max;
+      }, {count: -1, isJP2: false, userBalls: []});
+      
+      let matchText = pastPreds.length > 0 ? getPrize(bestTicketObj.count, bestTicketObj.isJP2) : "";
+      
       histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
-        <div style="font-size:11px; color:#888;">📅 ${date} <span class="win-tag">${getPrize(matchCount)}</span></div>
+        <div style="font-size:11px; color:#888;">📅 ${date} <span class="win-tag">${matchText}</span></div>
         <div style="display:flex; gap:4px; margin-top:4px;">
-          ${d.numbers.map(n => {
-            // Chỉ tô màu nếu con số đó nằm trong vé VIP trúng cao nhất
-            let isMatched = bestTicket.includes(n);
+          ${actualData.numbers.map(n => {
+            let isMatched = bestTicketObj.userBalls.includes(n);
             return `<span class="ball ${isMatched ? 'matched' : ''}" style="width:26px; height:26px; font-size:11px;">${n.toString().padStart(2,'0')}</span>`;
           }).join('')}
-          ${d.bonus ? `<span class="ball" style="width:26px; height:26px; font-size:11px; border-color:#ff1744;">${d.bonus.toString().padStart(2,'0')}</span>` : ''}
+          ${actualData.bonus ? `<span class="ball ${bestTicketObj.isJP2 && bestTicketObj.userBalls.includes(actualData.bonus) ? 'matched' : ''}" style="width:26px; height:26px; font-size:11px; border-color:#ff1744;">${actualData.bonus.toString().padStart(2,'0')}</span>` : ''}
         </div>
       </div>`;
     });
