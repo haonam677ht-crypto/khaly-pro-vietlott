@@ -142,126 +142,185 @@ function getPrize(count, isJP2) {
   return "";
 }
 
-// -----------------------------------------------------
-// THUẬT TOÁN AI NÂNG CẤP: MULTI-LAYER PROBABILITY
-// -----------------------------------------------------
+// ==========================================================
+// 🚀 THUẬT TOÁN MỚI: TÍCH HỢP MONTE CARLO & MA TRẬN TRỌNG SỐ
+// ==========================================================
 function generate(dataMap, sortedDates, targetDate) {
   let maxLimit = currentType === 'mega' ? 45 : 55;
   
-  // Ràng buộc cơ bản nếu chưa có lịch sử
+  // Trả về mặc định nếu chưa có dữ liệu
   if (sortedDates.length === 0) {
       return [Array.from({length:6}, (_,i)=>i+1), Array.from({length:6}, (_,i)=>i+2)];
   }
 
-  // 1. Phân tích Tháng (Chu kỳ)
+  let totalDraws = sortedDates.length;
   let targetMonth = new Date(targetDate).getMonth() + 1;
 
-  // Khởi tạo các bộ đếm
-  let posFreq = Array(6).fill(0).map(() => ({})); // Vị trí
-  let monthFreq = {}; // Chu kỳ tháng
-  let pairFreq = {}; // Cặp số đi cùng nhau
-  let gapData = {}; // Nhịp Gan / Điểm rơi
-  
+  // --- BƯỚC 1: KHỞI TẠO CÁC BỘ ĐẾM THỐNG KÊ ---
+  let freq10 = {}, freq30 = {}, monthFreq = {};
+  let posFreq = Array(6).fill(0).map(() => ({})); 
+  let pairFreq = {}, tripleFreq = {}; 
+  let gapData = {};
+
   for (let i = 1; i <= maxLimit; i++) {
-      monthFreq[i] = 0;
+      freq10[i] = 0; freq30[i] = 0; monthFreq[i] = 0;
       gapData[i] = { lastSeenIndex: -1, allGaps: [] };
-      pairFreq[i] = {};
+      pairFreq[i] = {}; tripleFreq[i] = {};
   }
 
-  // 2. Quét toàn bộ lịch sử để thu thập dữ liệu
+  let lastDrawNumbers = dataMap[sortedDates[totalDraws - 1]].numbers || [];
+
+  // --- BƯỚC 2: QUÉT TOÀN BỘ LỊCH SỬ ĐỂ HUẤN LUYỆN AI ---
   sortedDates.forEach((d, drawIndex) => {
       let drawMonth = parseInt(d.split("-")[1]);
       let numbers = dataMap[d].numbers;
       if (!numbers || numbers.length !== 6) return;
 
+      let isLast10 = drawIndex >= (totalDraws - 10);
+      let isLast30 = drawIndex >= (totalDraws - 30);
+
       for (let i = 0; i < 6; i++) {
           let n1 = numbers[i];
           
-          // Ghi nhận Tần suất Vị trí
-          posFreq[i][n1] = (posFreq[i][n1] || 0) + 1;
-          
-          // Ghi nhận Chu kỳ Tháng
+          // Thống kê chu kỳ & vị trí
+          if (isLast10) freq10[n1]++;
+          if (isLast30) freq30[n1]++;
           if (drawMonth === targetMonth) monthFreq[n1]++;
+          posFreq[i][n1] = (posFreq[i][n1] || 0) + 1;
 
-          // Ghi nhận Nhịp Gan
+          // Thống kê điểm rơi (Gap)
           if (gapData[n1].lastSeenIndex !== -1) {
               gapData[n1].allGaps.push(drawIndex - gapData[n1].lastSeenIndex);
           }
           gapData[n1].lastSeenIndex = drawIndex;
 
-          // Ghi nhận Sự liên kết Cặp
+          // Thống kê Pairs (Cặp 2)
           for (let j = i + 1; j < 6; j++) {
               let n2 = numbers[j];
               pairFreq[n1][n2] = (pairFreq[n1][n2] || 0) + 1;
               pairFreq[n2][n1] = (pairFreq[n2][n1] || 0) + 1;
+
+              // Thống kê Triples (Bộ 3)
+              for (let k = j + 1; k < 6; k++) {
+                  let n3 = numbers[k];
+                  let triKey = [n1, n2, n3].sort((a,b)=>a-b).join('-');
+                  tripleFreq[triKey] = (tripleFreq[triKey] || 0) + 1;
+              }
           }
       }
   });
 
-  // 3. Tính toán Điểm Rơi (Nhịp Gan Hiện Tại so với Nhịp Gan Trung Bình)
-  let currentDrawIndex = sortedDates.length;
+  // Xử lý điểm Gap (Chuẩn hoá để làm Trọng số)
   let gapScores = {};
   for (let i = 1; i <= maxLimit; i++) {
-      let currentGap = gapData[i].lastSeenIndex === -1 ? currentDrawIndex : (currentDrawIndex - gapData[i].lastSeenIndex);
+      let currentGap = gapData[i].lastSeenIndex === -1 ? totalDraws : (totalDraws - 1 - gapData[i].lastSeenIndex);
       let avgGap = gapData[i].allGaps.length > 0 ? gapData[i].allGaps.reduce((a, b) => a + b, 0) / gapData[i].allGaps.length : maxLimit;
-      
-      // Số nào có nhịp gan hiện tại càng gần với nhịp gan trung bình của chính nó thì điểm càng cao (sắp nổ)
       let gapDiff = Math.abs(currentGap - avgGap);
-      gapScores[i] = Math.max(0, 10 - gapDiff); // Khoảng cách <= 10 kỳ thì được cộng điểm
+      gapScores[i] = Math.max(0, 10 - gapDiff); // Gần với nhịp gan trung bình -> Điểm cao
   }
 
-  // 4. Sinh ra 2 bộ vé dự đoán bằng Ma trận Trọng số (Weighted Scoring Matrix)
-  let result = [];
-  for (let ticketIndex = 0; ticketIndex < 2; ticketIndex++) {
-      let ticket = [];
-      let prevNum = 0; // Để đảm bảo mảng số được sắp xếp tăng dần
+  // --- BƯỚC 3: MONTE CARLO (SINH HÀNG CHỤC NGÀN BỘ SỐ VÀ LỌC BẰNG LUẬT CỨNG) ---
+  let validTickets = [];
+  let attempts = 0;
+  let targetPoolSize = 5000; // Tập mẫu vé sẽ mang đi chấm điểm
 
-      for (let pos = 0; pos < 6; pos++) {
-          let candidateScores = [];
-          
-          // Tính khoảng giới hạn của bóng để đảm bảo đủ chỗ cho các bóng phía sau
-          let minAllowed = prevNum + 1;
-          let maxAllowed = maxLimit - (5 - pos);
+  let midPoint = currentType === 'mega' ? 22 : 27;
+  let minSum = currentType === 'mega' ? 90 : 110;
+  let maxSum = currentType === 'mega' ? 150 : 180;
 
-          for (let num = minAllowed; num <= maxAllowed; num++) {
-              // Lấy điểm từ 4 Lớp Dữ Liệu
-              let s_pos = posFreq[pos][num] || 0;
-              let s_month = monthFreq[num] || 0;
-              let s_gap = gapScores[num] || 0;
-              let s_pair = 0;
-              
-              // Nếu từ bóng số 2 trở đi, cộng điểm nếu số này thường đi chung với quả bóng trước đó
-              if (pos > 0) {
-                  s_pair = pairFreq[ticket[pos - 1]][num] || 0;
-              }
+  function getRandomTicket() {
+      let t = new Set();
+      while(t.size < 6) t.add(Math.floor(Math.random() * maxLimit) + 1);
+      return Array.from(t).sort((a,b)=>a-b);
+  }
 
-              // Tổng hợp Trọng số (Có thể tuỳ chỉnh mức độ quan trọng tại đây)
-              let totalScore = (s_pos * 1.0) + (s_month * 1.5) + (s_pair * 2.0) + (s_gap * 1.5);
-              
-              candidateScores.push({ num: num, score: totalScore });
-          }
+  while(validTickets.length < targetPoolSize && attempts < 50000) {
+      attempts++;
+      let t = getRandomTicket();
 
-          // Xếp hạng các con số dựa trên Tổng Điểm
-          candidateScores.sort((a, b) => b.score - a.score);
+      // Luật 1: Tổng điểm (Sum Check) - Loại các dải số quá nhỏ hoặc quá lớn
+      let sum = t.reduce((a,b) => a+b, 0);
+      if(sum < minSum || sum > maxSum) continue;
 
-          let selectedCandidate = candidateScores[0]; // Mặc định chọn số có điểm cao nhất
+      // Luật 2: Chẵn/Lẻ (Odd/Even Check) - Chỉ nhận 3:3, 4:2, 2:4
+      let odds = t.filter(x => x % 2 !== 0).length;
+      if(odds < 2 || odds > 4) continue;
 
-          // Đối với vé VIP 2 (ticketIndex > 0), lấy ngẫu nhiên 1 trong Top 3 điểm cao nhất để tạo sự linh hoạt, tránh trùng vé VIP 1
-          if (ticketIndex > 0 && candidateScores.length > 2) {
-              let topK = Math.min(3, candidateScores.length);
-              let randIdx = Math.floor(Math.random() * topK);
-              selectedCandidate = candidateScores[randIdx];
-          }
+      // Luật 3: Cao/Thấp (High/Low Check) - Chỉ nhận 3:3, 4:2, 2:4
+      let highs = t.filter(x => x > midPoint).length;
+      if(highs < 2 || highs > 4) continue;
 
-          // Fallback an toàn
-          if (!selectedCandidate) selectedCandidate = { num: minAllowed };
+      // Luật 4: Số lần lặp lại kỳ trước (Repetition) - Ép tối đa chỉ được lặp lại 1 hoặc 2 số
+      let reps = t.filter(x => lastDrawNumbers.includes(x)).length;
+      if(reps > 2) continue;
 
-          ticket.push(selectedCandidate.num);
-          prevNum = selectedCandidate.num;
+      // Vé qua được tất cả vòng kiểm duyệt -> Lưu vào tập mẫu
+      validTickets.push(t);
+  }
+
+  // --- BƯỚC 4: CHẤM ĐIỂM BẰNG MA TRẬN TRỌNG SỐ (WEIGHTED MATRIX) ---
+  // Định mức max để chuẩn hoá tỷ lệ phần trăm
+  let maxF10 = Math.max(...Object.values(freq10)) || 1;
+  let maxF30 = Math.max(...Object.values(freq30)) || 1;
+
+  let scoredTickets = validTickets.map(t => {
+      let score = 0;
+      let pairScore = 0;
+      let tripleScore = 0;
+
+      // Chấm điểm từng con số độc lập
+      for(let i = 0; i < 6; i++) {
+          let n = t[i];
+          let sF10 = (freq10[n] / maxF10) * 30;         // 30% Hot Number 10 kỳ
+          let sF30 = (freq30[n] / maxF30) * 20;         // 20% Hot Number 30 kỳ
+          let sPos = (posFreq[i][n] || 0) * 0.5;        // ~15% Phù hợp vị trí bóng
+          let sMon = (monthFreq[n] > 0 ? 5 : 0);        // 5% Chu kỳ tháng
+          let sGap = (gapScores[n] / 10) * 5;           // 5% Điểm rơi nhịp Gan
+
+          score += (sF10 + sF30 + sPos + sMon + sGap);
       }
-      result.push(ticket);
+
+      // Chấm điểm Cặp 2 (Pair - 10%)
+      for(let i = 0; i < 5; i++) {
+          for(let j = i + 1; j < 6; j++) {
+              pairScore += (pairFreq[t[i]][t[j]] || 0);
+          }
+      }
+
+      // Chấm điểm Bộ 3 (Triple - 10%)
+      for(let i = 0; i < 4; i++) {
+          for(let j = i + 1; j < 5; j++) {
+              for(let k = j + 1; k < 6; k++) {
+                  let triKey = [t[i], t[j], t[k]].join('-');
+                  tripleScore += (tripleFreq[triKey] || 0);
+              }
+          }
+      }
+
+      // Ép trọng số Pair và Triple vào tổng điểm chung
+      score += (pairScore * 0.8) + (tripleScore * 1.5); 
+
+      return { ticket: t, score: score };
+  });
+
+  // --- BƯỚC 5: XẾP HẠNG VÀ XUẤT RA VIP 1 & VIP 2 ---
+  scoredTickets.sort((a,b) => b.score - a.score);
+
+  let vip1 = scoredTickets[0].ticket;
+  let vip2 = vip1;
+  
+  // Tìm VIP 2: Lấy vé tốt nhất kế tiếp nhưng phải khác VIP 1 ít nhất 2 con số để đa dạng hoá cơ hội
+  for (let i = 1; i < 50; i++) {
+      if (scoredTickets[i]) {
+          let diffCount = scoredTickets[i].ticket.filter(x => !vip1.includes(x)).length;
+          if (diffCount >= 2) {
+              vip2 = scoredTickets[i].ticket;
+              break;
+          }
+      }
   }
-  return result;
+
+  return [vip1, vip2];
 }
 
 // Logic tìm Số Gan (Cold Numbers) giữ nguyên
@@ -291,7 +350,7 @@ function loadData() {
     snapshot.forEach(doc => { dataMap[doc.id] = doc.data(); sortedDates.push(doc.id); });
     sortedDates.sort();
 
-    // 1. DỰ ĐOÁN HÔM NAY (Đã cập nhật Date cho hệ thống chu kỳ Tháng)
+    // 1. DỰ ĐOÁN HÔM NAY
     let todayString = new Date().toISOString().slice(0, 10);
     let currentPreds = generate(dataMap, sortedDates, todayString);
     let html = "";
@@ -322,7 +381,6 @@ function loadData() {
       let actualData = dataMap[date];
       let pastDates = sortedDates.filter(d => d < date);
       
-      // Khởi chạy hệ thống giả lập với ngày trong quá khứ để check
       let pastPreds = pastDates.length > 0 ? generate(dataMap, pastDates, date) : [];
       
       let matchCounts = pastPreds.map(predBalls => {
