@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Khaly Pro Vietlott</title>
+<title>Khaly Pro Vietlott - Positional AI</title>
 <style>
   :root { --bg: #090e1a; --card: #151d30; --accent: #ff1744; --text: #e0e0e0; --win: #ffeb3b; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
@@ -54,7 +54,7 @@
   </div>
   
   <div class="box">
-    <h4>📜 LỊCH SỬ DỮ LIỆU & KIỂM ĐỊNH AI</h4>
+    <h4>📜 LỊCH SỬ & KIỂM ĐỊNH AI POSITIONAL</h4>
     <div id="history-list" style="max-height: 350px; overflow-y: auto;"></div>
   </div>
 </div>
@@ -74,16 +74,10 @@ for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type=
 function updateSchedule() {
   const d = new Date().getDay();
   const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-  
   let scheduleText = "";
-  if ([3, 5, 0].includes(d)) {
-    scheduleText = "MEGA 6/45 xổ";
-  } else if ([2, 4, 6].includes(d)) {
-    scheduleText = "POWER 6/55 xổ";
-  } else {
-    scheduleText = "Ngày nghỉ (Không xổ Mega/Power)";
-  }
-
+  if ([3, 5, 0].includes(d)) scheduleText = "MEGA 6/45 xổ";
+  else if ([2, 4, 6].includes(d)) scheduleText = "POWER 6/55 xổ";
+  else scheduleText = "Ngày nghỉ (Không xổ Mega/Power)";
   document.getElementById("schedule-box").innerText = `Hôm nay ${days[d]} - ${scheduleText}`;
 }
 updateSchedule();
@@ -104,13 +98,8 @@ function pasteNumbers() {
      if(p.length > 2) matches.push(...p.match(/\d{2}/g) || []);
      else matches.push(p);
   });
-  
-  document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => {
-     inp.value = matches[idx] ? parseInt(matches[idx]) : "";
-  });
-  if(currentType === 'power' && matches[6]) {
-     document.getElementById("input-bonus").value = parseInt(matches[6]);
-  }
+  document.querySelectorAll("#inputs-6 input").forEach((inp, idx) => { inp.value = matches[idx] ? parseInt(matches[idx]) : ""; });
+  if(currentType === 'power' && matches[6]) document.getElementById("input-bonus").value = parseInt(matches[6]);
 }
 
 async function saveData() {
@@ -128,202 +117,117 @@ async function deleteData() {
 
 function getPrize(count, isJP2) {
   if (currentType === 'mega') {
-    if (count == 3) return "Trúng 3 số (30k)";
-    if (count == 4) return "Trúng 4 số (300k)";
-    if (count == 5) return "Trúng 5 số (10Tr)";
-    if (count == 6) return "JACKPOT!";
+    if (count == 3) return "Trúng 3 số (30k)"; if (count == 4) return "Trúng 4 số (300k)"; if (count == 5) return "Trúng 5 số (10Tr)"; if (count == 6) return "JACKPOT!";
   } else {
-    if (count == 3) return "Trúng 3 số (50k)";
-    if (count == 4) return "Trúng 4 số (500k)";
-    if (count == 5 && !isJP2) return "Trúng 5 số (40Tr)";
-    if (count == 5 && isJP2) return "JACKPOT 2! 🏆";
-    if (count == 6) return "JACKPOT 1! 👑";
+    if (count == 3) return "Trúng 3 số (50k)"; if (count == 4) return "Trúng 4 số (500k)"; if (count == 5 && !isJP2) return "Trúng 5 số (40Tr)"; if (count == 5 && isJP2) return "JACKPOT 2! 🏆"; if (count == 6) return "JACKPOT 1! 👑";
   }
   return "";
 }
 
 // ==========================================================
-// 🚀 THUẬT TOÁN MỚI: TÍCH HỢP MONTE CARLO & MA TRẬN TRỌNG SỐ
+// 🚀 THUẬT TOÁN MỚI: CHUỖI MARKOV THEO VỊ TRÍ & POISSON
 // ==========================================================
 function generate(dataMap, sortedDates, targetDate) {
   let maxLimit = currentType === 'mega' ? 45 : 55;
-  
-  // Trả về mặc định nếu chưa có dữ liệu
-  if (sortedDates.length === 0) {
-      return [Array.from({length:6}, (_,i)=>i+1), Array.from({length:6}, (_,i)=>i+2)];
-  }
+  if (sortedDates.length === 0) return [Array.from({length:6}, (_,i)=>i+1), Array.from({length:6}, (_,i)=>i+2)];
 
   let totalDraws = sortedDates.length;
-  let targetMonth = new Date(targetDate).getMonth() + 1;
+  let recentDraws = 30; // Trọng tâm 30 kỳ gần nhất để tính Poisson
 
-  // --- BƯỚC 1: KHỞI TẠO CÁC BỘ ĐẾM THỐNG KÊ ---
-  let freq10 = {}, freq30 = {}, monthFreq = {};
-  let posFreq = Array(6).fill(0).map(() => ({})); 
-  let pairFreq = {}, tripleFreq = {}; 
-  let gapData = {};
+  // KHỞI TẠO BIẾN THỐNG KÊ
+  let overallFreq = {}; // Tần suất tổng thể 30 kỳ
+  let posFreq = Array(6).fill(0).map(() => ({})); // Tần suất độc lập tại từng vị trí (0-5)
+  let posChain = Array(5).fill(0).map(() => ({})); // Chuỗi nối: posChain[i][số_trước][số_sau]
+  
+  for(let i=1; i<=maxLimit; i++) overallFreq[i] = 0;
 
-  for (let i = 1; i <= maxLimit; i++) {
-      freq10[i] = 0; freq30[i] = 0; monthFreq[i] = 0;
-      gapData[i] = { lastSeenIndex: -1, allGaps: [] };
-      pairFreq[i] = {}; tripleFreq[i] = {};
-  }
-
-  let lastDrawNumbers = dataMap[sortedDates[totalDraws - 1]].numbers || [];
-
-  // --- BƯỚC 2: QUÉT TOÀN BỘ LỊCH SỬ ĐỂ HUẤN LUYỆN AI ---
-  sortedDates.forEach((d, drawIndex) => {
-      let drawMonth = parseInt(d.split("-")[1]);
-      let numbers = dataMap[d].numbers;
-      if (!numbers || numbers.length !== 6) return;
-
-      let isLast10 = drawIndex >= (totalDraws - 10);
-      let isLast30 = drawIndex >= (totalDraws - 30);
+  // QUÉT DỮ LIỆU ĐỂ HUẤN LUYỆN MODEL VỊ TRÍ
+  let startIdx = Math.max(0, totalDraws - recentDraws);
+  for (let d = startIdx; d < totalDraws; d++) {
+      let numbers = dataMap[sortedDates[d]].numbers;
+      if (!numbers || numbers.length !== 6) continue;
 
       for (let i = 0; i < 6; i++) {
-          let n1 = numbers[i];
+          let num = numbers[i];
+          overallFreq[num]++;
+          posFreq[i][num] = (posFreq[i][num] || 0) + 1;
+
+          // Huấn luyện chuỗi Markov (Số B đi liền sau số A ở 2 vị trí kề nhau)
+          if (i > 0) {
+              let prevNum = numbers[i-1];
+              if (!posChain[i-1][prevNum]) posChain[i-1][prevNum] = {};
+              posChain[i-1][prevNum][num] = (posChain[i-1][prevNum][num] || 0) + 1;
+          }
+      }
+  }
+
+  // TÍNH TOÁN XÁC SUẤT POISSON CHO TỪNG SỐ
+  let poissonScores = {};
+  for(let i=1; i<=maxLimit; i++) {
+      let lambda = overallFreq[i] / recentDraws; // Số lần xuất hiện trung bình mỗi kỳ
+      if (lambda === 0) lambda = 0.001;
+      let probPoisson = 1 - Math.exp(-lambda); // Xác suất Poisson nổ ít nhất 1 lần
+      poissonScores[i] = probPoisson;
+  }
+
+  // HÀM XÂY DỰNG BỘ SỐ CHUẨN (Tối ưu theo từng vị trí)
+  function buildTicket(isVip2 = false) {
+      let ticket = [];
+      let currentMin = 1;
+
+      for (let i = 0; i < 6; i++) {
+          let bestScore = -9999;
+          let selectedNum = -1;
           
-          // Thống kê chu kỳ & vị trí
-          if (isLast10) freq10[n1]++;
-          if (isLast30) freq30[n1]++;
-          if (drawMonth === targetMonth) monthFreq[n1]++;
-          posFreq[i][n1] = (posFreq[i][n1] || 0) + 1;
+          // Giới hạn vùng an toàn cho từng vị trí để dãy số hợp lý
+          let safeMax = maxLimit - (5 - i);
 
-          // Thống kê điểm rơi (Gap)
-          if (gapData[n1].lastSeenIndex !== -1) {
-              gapData[n1].allGaps.push(drawIndex - gapData[n1].lastSeenIndex);
-          }
-          gapData[n1].lastSeenIndex = drawIndex;
+          for (let candidate = currentMin; candidate <= safeMax; candidate++) {
+              let score = 0;
 
-          // Thống kê Pairs (Cặp 2)
-          for (let j = i + 1; j < 6; j++) {
-              let n2 = numbers[j];
-              pairFreq[n1][n2] = (pairFreq[n1][n2] || 0) + 1;
-              pairFreq[n2][n1] = (pairFreq[n2][n1] || 0) + 1;
+              // 1. Điểm Poisson tổng thể
+              score += poissonScores[candidate] * 10;
 
-              // Thống kê Triples (Bộ 3)
-              for (let k = j + 1; k < 6; k++) {
-                  let n3 = numbers[k];
-                  let triKey = [n1, n2, n3].sort((a,b)=>a-b).join('-');
-                  tripleFreq[triKey] = (tripleFreq[triKey] || 0) + 1;
+              // 2. Điểm Tần suất chuẩn Vị trí (Rất quan trọng)
+              score += (posFreq[i][candidate] || 0) * 5;
+
+              // 3. Điểm Chuỗi Markov Liên kết (Nếu không phải vị trí đầu tiên)
+              if (i > 0) {
+                  let prevNum = ticket[i-1];
+                  score += (posChain[i-1][prevNum]?.[candidate] || 0) * 15; // Nối vị trí trọng số cao
+              }
+
+              // Làm đa dạng hóa cho VIP 2
+              if (isVip2) {
+                 score += (Math.random() * 5); // Thêm độ nhiễu nhỏ để vé 2 khác vé 1
+              }
+
+              if (score > bestScore) {
+                  bestScore = score;
+                  selectedNum = candidate;
               }
           }
+          ticket.push(selectedNum);
+          currentMin = selectedNum + 1; // Số tiếp theo phải lớn hơn số hiện tại
       }
-  });
-
-  // Xử lý điểm Gap (Chuẩn hoá để làm Trọng số)
-  let gapScores = {};
-  for (let i = 1; i <= maxLimit; i++) {
-      let currentGap = gapData[i].lastSeenIndex === -1 ? totalDraws : (totalDraws - 1 - gapData[i].lastSeenIndex);
-      let avgGap = gapData[i].allGaps.length > 0 ? gapData[i].allGaps.reduce((a, b) => a + b, 0) / gapData[i].allGaps.length : maxLimit;
-      let gapDiff = Math.abs(currentGap - avgGap);
-      gapScores[i] = Math.max(0, 10 - gapDiff); // Gần với nhịp gan trung bình -> Điểm cao
+      return ticket;
   }
 
-  // --- BƯỚC 3: MONTE CARLO (SINH HÀNG CHỤC NGÀN BỘ SỐ VÀ LỌC BẰNG LUẬT CỨNG) ---
-  let validTickets = [];
-  let attempts = 0;
-  let targetPoolSize = 5000; // Tập mẫu vé sẽ mang đi chấm điểm
-
-  let midPoint = currentType === 'mega' ? 22 : 27;
-  let minSum = currentType === 'mega' ? 90 : 110;
-  let maxSum = currentType === 'mega' ? 150 : 180;
-
-  function getRandomTicket() {
-      let t = new Set();
-      while(t.size < 6) t.add(Math.floor(Math.random() * maxLimit) + 1);
-      return Array.from(t).sort((a,b)=>a-b);
-  }
-
-  while(validTickets.length < targetPoolSize && attempts < 50000) {
-      attempts++;
-      let t = getRandomTicket();
-
-      // Luật 1: Tổng điểm (Sum Check) - Loại các dải số quá nhỏ hoặc quá lớn
-      let sum = t.reduce((a,b) => a+b, 0);
-      if(sum < minSum || sum > maxSum) continue;
-
-      // Luật 2: Chẵn/Lẻ (Odd/Even Check) - Chỉ nhận 3:3, 4:2, 2:4
-      let odds = t.filter(x => x % 2 !== 0).length;
-      if(odds < 2 || odds > 4) continue;
-
-      // Luật 3: Cao/Thấp (High/Low Check) - Chỉ nhận 3:3, 4:2, 2:4
-      let highs = t.filter(x => x > midPoint).length;
-      if(highs < 2 || highs > 4) continue;
-
-      // Luật 4: Số lần lặp lại kỳ trước (Repetition) - Ép tối đa chỉ được lặp lại 1 hoặc 2 số
-      let reps = t.filter(x => lastDrawNumbers.includes(x)).length;
-      if(reps > 2) continue;
-
-      // Vé qua được tất cả vòng kiểm duyệt -> Lưu vào tập mẫu
-      validTickets.push(t);
-  }
-
-  // --- BƯỚC 4: CHẤM ĐIỂM BẰNG MA TRẬN TRỌNG SỐ (WEIGHTED MATRIX) ---
-  // Định mức max để chuẩn hoá tỷ lệ phần trăm
-  let maxF10 = Math.max(...Object.values(freq10)) || 1;
-  let maxF30 = Math.max(...Object.values(freq30)) || 1;
-
-  let scoredTickets = validTickets.map(t => {
-      let score = 0;
-      let pairScore = 0;
-      let tripleScore = 0;
-
-      // Chấm điểm từng con số độc lập
-      for(let i = 0; i < 6; i++) {
-          let n = t[i];
-          let sF10 = (freq10[n] / maxF10) * 30;         // 30% Hot Number 10 kỳ
-          let sF30 = (freq30[n] / maxF30) * 20;         // 20% Hot Number 30 kỳ
-          let sPos = (posFreq[i][n] || 0) * 0.5;        // ~15% Phù hợp vị trí bóng
-          let sMon = (monthFreq[n] > 0 ? 5 : 0);        // 5% Chu kỳ tháng
-          let sGap = (gapScores[n] / 10) * 5;           // 5% Điểm rơi nhịp Gan
-
-          score += (sF10 + sF30 + sPos + sMon + sGap);
-      }
-
-      // Chấm điểm Cặp 2 (Pair - 10%)
-      for(let i = 0; i < 5; i++) {
-          for(let j = i + 1; j < 6; j++) {
-              pairScore += (pairFreq[t[i]][t[j]] || 0);
-          }
-      }
-
-      // Chấm điểm Bộ 3 (Triple - 10%)
-      for(let i = 0; i < 4; i++) {
-          for(let j = i + 1; j < 5; j++) {
-              for(let k = j + 1; k < 6; k++) {
-                  let triKey = [t[i], t[j], t[k]].join('-');
-                  tripleScore += (tripleFreq[triKey] || 0);
-              }
-          }
-      }
-
-      // Ép trọng số Pair và Triple vào tổng điểm chung
-      score += (pairScore * 0.8) + (tripleScore * 1.5); 
-
-      return { ticket: t, score: score };
-  });
-
-  // --- BƯỚC 5: XẾP HẠNG VÀ XUẤT RA VIP 1 & VIP 2 ---
-  scoredTickets.sort((a,b) => b.score - a.score);
-
-  let vip1 = scoredTickets[0].ticket;
-  let vip2 = vip1;
+  // Sinh 2 bộ số VIP
+  let vip1 = buildTicket(false);
+  let vip2 = buildTicket(true);
   
-  // Tìm VIP 2: Lấy vé tốt nhất kế tiếp nhưng phải khác VIP 1 ít nhất 2 con số để đa dạng hoá cơ hội
-  for (let i = 1; i < 50; i++) {
-      if (scoredTickets[i]) {
-          let diffCount = scoredTickets[i].ticket.filter(x => !vip1.includes(x)).length;
-          if (diffCount >= 2) {
-              vip2 = scoredTickets[i].ticket;
-              break;
-          }
-      }
+  // Đảm bảo VIP 2 khác VIP 1 ít nhất 2 số (fallback)
+  let loop = 0;
+  while(vip2.filter(x => !vip1.includes(x)).length < 2 && loop < 50) {
+      vip2 = buildTicket(true);
+      loop++;
   }
 
   return [vip1, vip2];
 }
 
-// Logic tìm Số Gan (Cold Numbers) giữ nguyên
+// Giữ nguyên Logic Cold Numbers
 function getColdNumbers(dataMap, sortedDates) {
    let maxLimit = currentType === 'mega' ? 45 : 55;
    let lastSeen = {};
@@ -350,7 +254,7 @@ function loadData() {
     snapshot.forEach(doc => { dataMap[doc.id] = doc.data(); sortedDates.push(doc.id); });
     sortedDates.sort();
 
-    // 1. DỰ ĐOÁN HÔM NAY
+    // 1. DỰ ĐOÁN
     let todayString = new Date().toISOString().slice(0, 10);
     let currentPreds = generate(dataMap, sortedDates, todayString);
     let html = "";
@@ -362,7 +266,7 @@ function loadData() {
     });
     document.getElementById("predict-list").innerHTML = html;
 
-    // 2. RENDER SỐ GAN
+    // 2. SỐ GAN
     let coldNums = getColdNumbers(dataMap, sortedDates);
     let coldHtml = `<div class="box"><h4>❄️ TOP 5 SỐ GAN (LÂU CHƯA VỀ)</h4>
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">`;
@@ -380,7 +284,6 @@ function loadData() {
     [...sortedDates].reverse().forEach((date) => {
       let actualData = dataMap[date];
       let pastDates = sortedDates.filter(d => d < date);
-      
       let pastPreds = pastDates.length > 0 ? generate(dataMap, pastDates, date) : [];
       
       let matchCounts = pastPreds.map(predBalls => {
