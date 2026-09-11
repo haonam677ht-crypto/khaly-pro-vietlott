@@ -3,73 +3,137 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Khaly Pro Vietlott - Positional AI</title>
+<title>Khaly Pro Vietlott - AI Pipeline 7.6 (Tách luồng Ghim Vé)</title>
 <style>
-  :root { --bg: #090e1a; --card: #151d30; --accent: #ff1744; --text: #e0e0e0; --win: #ffeb3b; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 15px; margin: 0; }
-  .container { max-width: 480px; margin: auto; }
-  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; }
+  :root { --bg: #090e1a; --card: #151d30; --accent: #ff1744; --text: #e0e0e0; --win: #ffeb3b; --success: #00e676; --judge: #29b6f6; --memory: #ab47bc; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; margin: 0; font-size: 14px; }
+  .container { max-width: 500px; margin: auto; }
+  h2 { color: var(--accent); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-weight: 800; letter-spacing: 1px;}
+  
+  /* Tabs */
   .tab-group { display: flex; gap: 10px; margin-bottom: 15px; }
-  .tab-btn { flex: 1; padding: 12px; background: #2a3a5a; border: none; color: #fff; border-radius: 6px; cursor: pointer; }
-  .tab-btn.active { background: var(--accent); color: #fff; font-weight: bold; }
-  .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-  h4 { margin-top: 0; margin-bottom: 15px; text-transform: uppercase; color: #aaa; font-size: 13px; }
-  .predict-item { border-bottom: 1px solid #2a3a5a; padding: 10px 0; }
-  .vip-style { border: 1px solid var(--accent); padding: 12px; border-radius: 8px; background: #250a0a; margin-bottom: 10px;}
-  .ball { width: 30px; height: 30px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin: 2px; }
-  .ball.matched { background: var(--win); color: #000; border-color: var(--win); }
-  input, textarea { background: #0c1220; border: 1px solid #2a3a5a; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 5px 0; }
+  .tab-btn { flex: 1; padding: 12px; background: #2a3a5a; border: none; color: #fff; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; }
+  .tab-btn.active { background: var(--accent); box-shadow: 0 0 10px rgba(255, 23, 68, 0.4); }
+  
+  /* Box Layout */
+  .box { background: var(--card); border: 1px solid #2a3a5a; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+  h4 { margin-top: 0; margin-bottom: 15px; text-transform: uppercase; color: #aaa; font-size: 12px; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;}
+  
+  /* Balls */
+  .ball { width: 32px; height: 32px; background: #1a2538; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin: 2px; box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+  .ball.matched { background: var(--win); color: #000; border-color: var(--win); box-shadow: 0 0 8px var(--win); }
+  
+  /* Lịch sử song song */
+  .hist-container { display: flex; justify-content: space-between; align-items: stretch; gap: 4px; margin-top: 8px; }
+  .hist-col { flex: 1; background: #0c1220; padding: 6px 2px; border-radius: 6px; border: 1px dashed #2a3a5a; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .hist-title { font-size: 9px; color: #888; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; text-align: center; }
+  .hist-balls { display: flex; flex-wrap: wrap; gap: 1.5px; justify-content: center; max-width: 100%; }
+  .ball-xs { width: 19px; height: 19px; font-size: 9px; background: #1a2538; border: 1px solid #555; color: #fff; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: inset 0 0 2px rgba(0,0,0,0.5); }
+  .ball-xs.matched { background: var(--win); color: #000; border-color: var(--win); box-shadow: 0 0 4px var(--win); }
+
+  /* Inputs & Buttons */
+  input, textarea { background: #0c1220; border: 1px solid #2a3a5a; color: #fff; padding: 10px; border-radius: 6px; width: 100%; box-sizing: border-box; margin: 5px 0; font-family: monospace;}
   .grid-6 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 8px 0; }
-  .grid-6 input { background: #0c1220; border: 1px solid var(--accent); text-align: center; font-weight: bold; padding: 8px 0; border-radius: 6px; color: var(--accent); }
-  button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; }
-  .save { background: var(--accent); color: #fff; }
-  .delete { background: #2a3a5a; color: #aaa; }
-  .btn-paste { background: #1a2538; color: #fff; border: 1px solid #2a3a5a; }
-  .win-tag { color: var(--win); font-weight: bold; font-size: 11px; display: block; }
+  .grid-6 input { text-align: center; font-weight: bold; font-size: 16px; color: var(--accent); border-color: #3a4a6a;}
+  
+  .input-actions { display: flex; gap: 5px; margin-top: 5px; }
+  button { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin: 5px 0; transition: 0.2s; }
+  .btn-save { background: var(--success); color: #000; }
+  .btn-delete { background: #2a3a5a; color: #aaa; margin-top: 5px; }
+  .btn-paste { background: #1a2538; color: #fff; border: 1px solid #2a3a5a; flex: 2; margin: 0;}
+  .btn-clear { background: #455a64; color: #fff; border: 1px solid #2a3a5a; flex: 1; margin: 0;}
+  .btn-opt { background: linear-gradient(90deg, #ff1744, #d50000); color: #fff; box-shadow: 0 4px 10px rgba(255,23,68,0.3); border: 1px solid #ff5252;}
+  
+  /* Status/Logs */
+  #status-bar { text-align: center; font-size: 12px; color: #aaa; margin-bottom: 10px; font-style: italic; }
+  .loader { display: inline-block; width: 12px; height: 12px; border: 2px solid #fff; border-bottom-color: transparent; border-radius: 50%; animation: rotation 1s linear infinite; margin-right: 5px; vertical-align: middle; }
+  @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  /* 3-COLUMNS LAYOUT */
+  .three-col-container { display: flex; gap: 5px; align-items: stretch; width: 100%; overflow: hidden; }
+  .col-item { flex: 1; background: #0c1220; border: 1px solid #2a3a5a; border-radius: 6px; padding: 6px 3px; min-width: 0; display: flex; flex-direction: column; }
+  .col-title { font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 5px; text-transform: uppercase; border-bottom: 1px solid #2a3a5a; padding-bottom: 4px; }
+  .ticket-box { background: #111827; border-radius: 4px; padding: 4px 2px; margin-bottom: 5px; border: 1px dashed #2a3a5a; }
+  .ticket-box:last-child { margin-bottom: 0; }
+  .ticket-lbl { font-size: 8px; color: #888; text-align: center; margin-bottom: 3px; font-weight: bold;}
+  .ticket-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 2px; }
+  .ball-sm { width: 15px; height: 15px; font-size: 8px; border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .judge-sm-table { width: 100%; font-size: 8px; border-collapse: collapse; margin-top: 2px; }
+  .judge-sm-table th, .judge-sm-table td { border: 1px solid #2a3a5a; padding: 3px 1px; text-align: center; }
+  .judge-sm-table th { color: var(--judge); font-weight: normal; background: #111827;}
 </style>
 </head>
 <body>
 <div class="container">
-  <h2>Khaly Pro Vietlott</h2>
-  <div id="schedule-box" style="background:#1a2538; border:1px solid var(--accent); padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; color:var(--accent); font-weight:bold;"></div>
+  <h2>Khaly Pro Vietlott 7.6</h2>
   
+  <div id="schedule-box" style="background:#1a2538; border:1px solid var(--accent); padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; color:var(--accent); font-weight:bold;"></div>
+
   <div class="tab-group">
     <button id="btn-mega" class="tab-btn active" onclick="switchType('mega')">MEGA 6/45</button>
     <button id="btn-power" class="tab-btn" onclick="switchType('power')">POWER 6/55</button>
   </div>
   
-  <div id="predict-list" class="box"></div>
-  
-  <div id="cold-list-container"></div>
+  <div id="status-bar">Đang tải dữ liệu từ Firebase...</div>
 
+  <!-- BẢNG ĐIỀU KHIỂN AI -->
   <div class="box">
-    <h4>⚙️ NHẬP LIỆU</h4>
+    <h4>
+      <span>🧠 AI OPTIMIZER (META LEARNING)</span>
+      <span id="weight-score" style="color:var(--success)"></span>
+    </h4>
+    <button class="btn-opt" id="btn-optimize" onclick="runAutoOptimizer()">⚙️ Ép AI Meta Học Ngay (Evolution)</button>
+  </div>
+
+  <!-- KẾT QUẢ DỰ ĐOÁN -->
+  <div id="predict-list" class="box" style="display: none;">
+    <h4>🔮 DỰ ĐOÁN CHO KỲ QUAY TỚI</h4>
+    <div id="vip-container"></div>
+    <button onclick="lockCurrentPrediction()" style="background: var(--memory); color: #fff; padding: 12px; border: none; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(171, 71, 188, 0.3); margin-top: 10px;">📌 GHIM VÉ NÀY (ĐÁNH DẤU ĐÃ MUA)</button>
+  </div>
+
+  <!-- NHẬP LIỆU -->
+  <div class="box">
+    <h4>⚙️ CẬP NHẬT KẾT QUẢ XỔ SỐ THỰC TẾ</h4>
     <input type="date" id="date-picker">
-    <textarea id="pasteInput" placeholder="Dán chuỗi số tại đây... (Ví dụ: 02 15 24 33 40 45)"></textarea>
-    <button class="btn-paste" onclick="pasteNumbers()">📥 Dán nhanh</button>
+    <textarea id="pasteInput" placeholder="Dán chuỗi số thực tế tại đây..." rows="2"></textarea>
+    
+    <div class="input-actions">
+        <button class="btn-paste" onclick="pasteNumbers()">📥 Dán nhanh</button>
+        <button class="btn-clear" onclick="clearInputs()">🔄 Xóa trắng</button>
+    </div>
+
     <div class="grid-6" id="inputs-6"></div>
     <input type="number" id="input-bonus" placeholder="Số Bonus (Chỉ Power)" style="display:none; border-color:var(--accent); color:var(--accent);">
-    <button class="save" onclick="saveData()">💾 Lưu kết quả kỳ này</button>
-    <button class="delete" onclick="deleteData()">🗑 Xoá ngày đã chọn</button>
+    
+    <button class="btn-save" onclick="saveData()">💾 Lưu Kết Quả Lên Firebase</button>
+    <button class="btn-delete" onclick="deleteData()">🗑 Xoá ngày đã chọn</button>
   </div>
-  
+
+  <!-- LỊCH SỬ KIỂM ĐỊNH -->
   <div class="box">
     <h4>📜 LỊCH SỬ & KIỂM ĐỊNH AI POSITIONAL</h4>
-    <div id="history-list" style="max-height: 350px; overflow-y: auto;"></div>
+    <div id="history-list" style="max-height: 400px; overflow-y: auto; padding-right: 5px;"></div>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
 <script>
+// =========================================================================
+// PHẦN 1: FIREBASE & BIẾN TOÀN CỤC
+// =========================================================================
 const firebaseConfig = { apiKey: "AIzaSyCT8UEFXvQEnr3j4tpH2SejMRsrVTUtHno", authDomain: "xoso-1c0bc.firebaseapp.com", projectId: "xoso-1c0bc", storageBucket: "xoso-1c0bc.appspot.com", messagingSenderId: "809250186083", appId: "1:809250186083:web:f190681f03347c696fe956" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let currentType = 'mega';
-document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
-const inputsDiv = document.getElementById("inputs-6");
-for(let i=0; i<6; i++){ let input = document.createElement("input"); input.type="number"; input.placeholder="00"; inputsDiv.appendChild(input); }
+let globalHistoryArray = [];
+let aiWorker = null;
+let currentDisplayedVIPs = []; 
+let currentDisplayedCoreVIPs = [];
+window.forceNewPrediction = false;
 
 function updateSchedule() {
   const d = new Date().getDay();
@@ -77,19 +141,399 @@ function updateSchedule() {
   let scheduleText = "";
   if ([3, 5, 0].includes(d)) scheduleText = "MEGA 6/45 xổ";
   else if ([2, 4, 6].includes(d)) scheduleText = "POWER 6/55 xổ";
-  else scheduleText = "Ngày nghỉ (Không xổ Mega/Power)";
+  else scheduleText = "Ngày nghỉ";
   document.getElementById("schedule-box").innerText = `Hôm nay ${days[d]} - ${scheduleText}`;
 }
 updateSchedule();
+
+document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
+const inputsDiv = document.getElementById("inputs-6");
+for(let i=0; i<6; i++){ 
+    let input = document.createElement("input"); 
+    input.type="number"; 
+    input.min = "1";
+    input.oninput = function() {
+        if (this.value.length >= 2) {
+            let next = this.nextElementSibling;
+            if (next && next.tagName === "INPUT") next.focus();
+            else if (currentType === 'power' && i === 5) document.getElementById("input-bonus").focus();
+        }
+    };
+    inputsDiv.appendChild(input); 
+}
+
+function clearInputs() {
+    document.querySelectorAll("#inputs-6 input").forEach(i => i.value = "");
+    document.getElementById("input-bonus").value = "";
+    document.getElementById("pasteInput").value = "";
+}
+
+// =========================================================================
+// PHẦN 2: WEB WORKER
+// =========================================================================
+const workerLogic = `
+  function cyrb53(str, seed = 0) {
+      let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+      for (let i = 0, ch; i < str.length; i++) {
+          ch = str.charCodeAt(i);
+          h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+      return 4294967296 * (2097151 & h2) + (h1>>>0);
+  }
+
+  function splitmix32(a) {
+      return function() {
+        a |= 0; a = a + 0x9e3779b9 | 0;
+        var t = a ^ a >>> 16; t = Math.imul(t, 0x21f0aaad);
+        t = t ^ t >>> 15; t = Math.imul(t, 0x735a2d97);
+        return ((t = t ^ t >>> 15) >>> 0) / 4294967296;
+      }
+  }
+
+  const CORE_DEFAULTS = { pos: 40, gap: 20, pair: 25, freq: 15, decay: 0.995, elite: 0.80, mcIter: 30000, mut: 0.15 };
+
+  function buildMatrices(history, type, metaParams) {
+      let maxLimit = type === 'mega' ? 45 : 55;
+      let totalDraws = history.length;
+      let decayRate = metaParams ? (metaParams.decay || CORE_DEFAULTS.decay) : CORE_DEFAULTS.decay;
+      
+      let gapMatrix = Array(maxLimit + 1).fill(0);
+      let lastSeen = Array(maxLimit + 1).fill(-1);
+      
+      let posFreq = Array(6).fill(0).map(() => Array(maxLimit + 1).fill(0));
+      let posGap = Array(6).fill(0).map(() => Array(maxLimit + 1).fill(0));
+      let lastSeenPos = Array(6).fill(0).map(() => Array(maxLimit + 1).fill(-1));
+      
+      let pairMatrix = Array(maxLimit + 1).fill(0).map(() => Array(maxLimit + 1).fill(0));
+      let posPair = Array(5).fill(0).map(() => Array(maxLimit + 1).fill(0).map(() => Array(maxLimit + 1).fill(0)));
+      
+      let overallFreq = Array(maxLimit + 1).fill(0);
+      let totalDecay = 0;
+
+      history.forEach((draw, dIdx) => {
+          let nums = draw.numbers;
+          if(!nums || nums.length < 6) return;
+          let sortedNums = [...nums].sort((a,b)=>a-b);
+          let age = totalDraws - 1 - dIdx;
+          let w = Math.pow(decayRate, age);
+          totalDecay += w;
+
+          for(let i = 0; i < 6; i++) {
+              let n = sortedNums[i];
+              
+              if(lastSeen[n] !== -1) {}
+              lastSeen[n] = dIdx; 
+
+              if(lastSeenPos[i][n] !== -1) {}
+              lastSeenPos[i][n] = dIdx;
+              
+              overallFreq[n] += w; 
+              posFreq[i][n] += w;
+              
+              if (i < 5) {
+                  let nextNum = sortedNums[i + 1];
+                  posPair[i][n][nextNum] += w;
+              }
+
+              for(let j = i + 1; j < 6; j++) {
+                  let m = sortedNums[j];
+                  pairMatrix[n][m] += w; pairMatrix[m][n] += w;
+              }
+          }
+      });
+      
+      for(let i=1; i<=maxLimit; i++) { 
+          gapMatrix[i] = lastSeen[i] === -1 ? totalDraws : (totalDraws - 1 - lastSeen[i]); 
+          for(let p=0; p<6; p++) {
+              posGap[p][i] = lastSeenPos[p][i] === -1 ? totalDraws : (totalDraws - 1 - lastSeenPos[p][i]);
+          }
+      }
+      
+      return { gapMatrix, posFreq, posGap, pairMatrix, posPair, overallFreq, maxLimit, totalDraws, totalDecay };
+  }
+
+  function isValidTicket(ticket, type) {
+      let sum = ticket.reduce((a, b) => a + b, 0);
+      if (type === 'mega' && (sum < 90 || sum > 180)) return false;
+      if (type === 'power' && (sum < 110 || sum > 210)) return false;
+      let evens = ticket.filter(n => n % 2 === 0).length;
+      if (evens === 0 || evens === 6) return false;
+      let consec = 1;
+      for(let i=1; i<6; i++) {
+          if (ticket[i] === ticket[i-1] + 1) consec++; else consec = 1;
+          if (consec >= 4) return false;
+      }
+      return true;
+  }
+
+  function scoreTicket(ticket, matrices, weights) {
+      let score = 0; 
+      for(let i=0; i<6; i++) {
+          let n = ticket[i];
+          let pScore = (matrices.posFreq[i][n] / (matrices.totalDecay || matrices.totalDraws)) * (weights.pos || 40) * 10;
+          score += pScore;
+          
+          let gap = matrices.posGap[i][n] || matrices.gapMatrix[n];
+          let gScore = (gap > 3 && gap < 20) ? (weights.gap || 20) : (gap > 25 ? -(weights.gap||20)/2 : 0);
+          score += gScore;
+          
+          for (let j = 0; j < i; j++) {
+              let prev = ticket[j];
+              let globalPairVal = matrices.pairMatrix[prev][n] || 0;
+              score += (globalPairVal * (weights.pair || 25) * 0.5); 
+              
+              if (j === i - 1) {
+                  let posPairVal = matrices.posPair[i-1][prev][n] || 0;
+                  score += (posPairVal * (weights.pair || 25) * 0.5);
+              }
+          }
+      }
+      return { ticket, score };
+  }
+
+  function generateVIP(matrices, metaParams, type, seedString) {
+      let candidates = [];
+      let maxLimit = matrices.maxLimit;
+      let random = splitmix32(cyrb53(seedString)); 
+
+         let iters = metaParams.mcIter || CORE_DEFAULTS.mcIter;
+      let eliteRate = metaParams.elite || CORE_DEFAULTS.elite;
+
+      let ranked = [];
+      for(let i=1; i<=maxLimit; i++) ranked.push({id: i, score: matrices.overallFreq[i] - (matrices.gapMatrix[i]*0.1)});
+      ranked.sort((a,b)=>b.score-a.score);
+      let elitePool = ranked.slice(0, Math.floor(maxLimit * 0.4)).map(x => x.id);
+
+      for(let i = 0; i < iters; i++) {
+          let ticket = new Set();
+          while(ticket.size < 6) {
+              if (random() < eliteRate) {
+                  let idx = Math.floor(Math.pow(random(), 2) * elitePool.length); 
+                  ticket.add(elitePool[idx]);
+              } else {
+                  ticket.add(Math.floor(random() * maxLimit) + 1);
+              }
+          }
+          let sorted = Array.from(ticket).sort((a,b)=>a-b);
+          if(isValidTicket(sorted, type)) candidates.push(scoreTicket(sorted, matrices, metaParams));
+      }
+      candidates.sort((a, b) => b.score - a.score);
+      let vip1 = candidates[0] || { ticket: [1,2,3,4,5,6], score: 0 };
+      let vip2 = candidates.find(c => {
+          let overlap = c.ticket.filter(n => vip1.ticket.includes(n)).length;
+          return overlap <= 3; 
+      }) || candidates[1] || { ticket: [2,3,4,5,6,7], score:0 };
+      return [vip1, vip2];
+  }
+
+  function runMetaGeneticAlgorithm(history, type) {
+      let testWindow = 100;
+      let testSet = history.slice(-testWindow);
+      let trainSet = history.slice(0, -testWindow);
+      if(trainSet.length < 20) return { metaParams: CORE_DEFAULTS, fitness: 0 };
+
+      let popSize = 20; 
+      let generations = 8; 
+      let population = [];
+
+      for(let i=0; i<popSize; i++) {
+          population.push({ 
+              pos: Math.random()*40+10, gap: Math.random()*40+10, pair: Math.random()*30+5, freq: Math.random()*30+5,
+              decay: 0.90 + Math.random()*0.099,
+              elite: 0.60 + Math.random()*0.30,
+              mcIter: 10000 + Math.floor(Math.random()*40000),
+              mut: 0.05 + Math.random()*0.20
+          });
+      }
+      let bestOverall = null;
+
+      for(let gen = 0; gen < generations; gen++) {
+          population.forEach(w => {
+              if (w.fitness) return; 
+              let matrices = buildMatrices(trainSet, type, w);
+              let totalReward = 0;
+              let searchParams = {...w, mcIter: 2000}; 
+              let preds = generateVIP(matrices, searchParams, type, "test_seed_" + gen); 
+              let v1 = preds[0].ticket; let v2 = preds[1].ticket;
+
+              testSet.forEach(draw => {
+                  let actual = draw.numbers;
+                  let m1 = actual.filter(n => v1.includes(n)).length;
+                  let m2 = actual.filter(n => v2.includes(n)).length;
+                  let bestMatch = Math.max(m1, m2);
+                  
+                  if(bestMatch === 6) totalReward += 10000;
+                  else if(bestMatch === 5) totalReward += 2500;
+                  else if(bestMatch === 4) totalReward += 500;
+                  else if(bestMatch === 3) totalReward += 100;
+                  else if(bestMatch === 2) totalReward += 10;
+                  else if(bestMatch <= 1) totalReward -= 5; 
+              });
+              w.fitness = totalReward;
+          });
+
+          population.sort((a,b) => b.fitness - a.fitness);
+          if(!bestOverall || population[0].fitness > bestOverall.fitness) {
+              bestOverall = JSON.parse(JSON.stringify(population[0]));
+          }
+          let newPop = [population[0], population[1]];
+          while(newPop.length < popSize) {
+              let p1 = population[Math.floor(Math.random() * 5)];
+              let p2 = population[Math.floor(Math.random() * 5)];
+              let mutRate = p1.mut; 
+              
+              let child = {
+                  pos: Math.random() < mutRate ? Math.random()*50 : (p1.pos + p2.pos) / 2,
+                  gap: Math.random() < mutRate ? Math.random()*50 : (p1.gap + p2.gap) / 2,
+                  pair: Math.random() < mutRate ? Math.random()*50 : (p1.pair + p2.pair) / 2,
+                  freq: Math.random() < mutRate ? Math.random()*50 : (p1.freq + p2.freq) / 2,
+                  decay: Math.random() < mutRate ? 0.90+Math.random()*0.099 : (p1.decay + p2.decay) / 2,
+                  elite: Math.random() < mutRate ? 0.6+Math.random()*0.3 : (p1.elite + p2.elite) / 2,
+                  mcIter: Math.random() < mutRate ? 10000+Math.random()*40000 : (p1.mcIter + p2.mcIter) / 2,
+                  mut: Math.random() < mutRate ? 0.05+Math.random()*0.2 : (p1.mut + p2.mut) / 2
+              };
+              newPop.push(child);
+          }
+          population = newPop;
+      }
+
+      let total = bestOverall.pos + bestOverall.gap + bestOverall.pair + bestOverall.freq;
+      return { 
+          metaParams: { 
+              pos: Math.round((bestOverall.pos/total)*100), gap: Math.round((bestOverall.gap/total)*100), 
+              pair: Math.round((bestOverall.pair/total)*100), freq: Math.round((bestOverall.freq/total)*100),
+              decay: bestOverall.decay, elite: bestOverall.elite, mcIter: Math.floor(bestOverall.mcIter), mut: bestOverall.mut
+          }, 
+          fitness: bestOverall.fitness 
+      };
+  }
+
+  function judgeModels(history, type, metaParams) {
+      let testWindow = Math.min(60, Math.floor(history.length * 0.25));
+      if(testWindow < 5) return { core: {avgHits:0, rate3:0, rate4:0, roi:0}, meta: {avgHits:0, rate3:0, rate4:0, roi:0} };
+      
+      let ticketCost = 10000;
+      let getPrize = (hits) => {
+          if (hits === 3) return type === 'mega' ? 30000 : 50000;
+          if (hits === 4) return type === 'mega' ? 300000 : 500000;
+          if (hits === 5) return type === 'mega' ? 10000000 : 40000000;
+          if (hits === 6) return 15000000000; 
+          return 0;
+      };
+
+      let evaluate = (params, isMeta) => {
+          let totalHits = 0; let hits3 = 0; let hits4 = 0;
+          let evaluatedCount = 0;
+          let totalSpent = 0;
+          let totalWon = 0;
+
+          for (let i = history.length - testWindow; i < history.length; i++) {
+              let trainSubset = history.slice(0, i);
+              let actualDraw = history[i];
+              if (trainSubset.length < 20) continue;
+
+              let matrices = buildMatrices(trainSubset, type, params);
+              let simParams = {...params, mcIter: 5000}; 
+              let vips = generateVIP(matrices, simParams, type, "wf_judge_" + isMeta + "_" + i);
+              
+              let m1 = actualDraw.numbers.filter(n => vips[0].ticket.includes(n)).length;
+              let m2 = actualDraw.numbers.filter(n => vips[1].ticket.includes(n)).length;
+              let best = Math.max(m1, m2);
+              
+              totalSpent += (ticketCost * 2);
+              totalWon += getPrize(m1) + getPrize(m2);
+
+              totalHits += best;
+              if (best >= 3) hits3++;
+              if (best >= 4) hits4++;
+              evaluatedCount++;
+          }
+
+          if (evaluatedCount === 0) return { avgHits: "0.00", rate3: "0.0", rate4: "0.0", roi: "0" };
+
+          let roiPercent = totalSpent > 0 ? ((totalWon - totalSpent) / totalSpent) * 100 : 0;
+
+          return {
+              avgHits: (totalHits / evaluatedCount).toFixed(2),
+              rate3: ((hits3 / evaluatedCount) * 100).toFixed(1),
+              rate4: ((hits4 / evaluatedCount) * 100).toFixed(1),
+              roi: roiPercent.toFixed(0)
+          };
+      };
+
+      return { core: evaluate(CORE_DEFAULTS, "core"), meta: evaluate(metaParams, "meta") };
+  }
+
+  self.onmessage = function(e) {
+      const { action, history, type, metaParams } = e.data;
+      
+      if (action === 'generate') {
+          let matricesCore = buildMatrices(history, type, CORE_DEFAULTS);
+          let baseSeedCore = (history.length > 0 ? history[history.length-1].id : "init") + JSON.stringify(CORE_DEFAULTS) + type;
+          let coreVips = generateVIP(matricesCore, CORE_DEFAULTS, type, baseSeedCore + "_core");
+
+          let matricesMeta = buildMatrices(history, type, metaParams);
+          let baseSeedMeta = (history.length > 0 ? history[history.length-1].id : "init") + JSON.stringify(metaParams) + type;
+          let metaVips = generateVIP(matricesMeta, metaParams, type, baseSeedMeta + "_meta");
+          
+          let judgeResults = judgeModels(history, type, metaParams);
+          
+          let historyVips = {};
+          let historyCoreVips = {}; 
+          for(let i = 0; i < history.length; i++) {
+              let pastHist = history.slice(0, i);
+              let pastDate = history[i].id;
+              if(pastHist.length > 5) {
+                  let histMetaParams = {...metaParams, mcIter: 1000};
+                  let histCoreParams = {...CORE_DEFAULTS, mcIter: 1000};
+                  
+                  let pMats = buildMatrices(pastHist, type, histMetaParams);
+                  let pSeed = (pastHist[pastHist.length-1].id) + JSON.stringify(histMetaParams) + type;
+                  let pVips = generateVIP(pMats, histMetaParams, type, pSeed);
+                  historyVips[pastDate] = [pVips[0].ticket, pVips[1].ticket];
+                  
+                  let pMatsCore = buildMatrices(pastHist, type, histCoreParams);
+                  let pSeedCore = (pastHist[pastHist.length-1].id) + JSON.stringify(histCoreParams) + type;
+                  let pCoreVips = generateVIP(pMatsCore, histCoreParams, type, pSeedCore + "_core");
+                  historyCoreVips[pastDate] = [pCoreVips[0].ticket]; 
+              }
+          }
+          self.postMessage({ action: 'result_generate', coreVips, metaVips, judgeResults, historyVips, historyCoreVips });
+      } 
+      else if (action === 'optimize' || action === 'optimize_silent') {
+          let result = runMetaGeneticAlgorithm(history, type);
+          self.postMessage({ action: 'result_' + action, result });
+      }
+  };
+`;
+const blob = new Blob([workerLogic], { type: 'application/javascript' });
+aiWorker = new Worker(URL.createObjectURL(blob));
+
+// =========================================================================
+// PHẦN 3: GIAO TIẾP UI & BỘ NHỚ
+// =========================================================================
+let currentMetaParams = JSON.parse(localStorage.getItem('ai_meta_v7_' + currentType)) || { pos: 40, gap: 20, pair: 25, freq: 15, decay: 0.995, elite: 0.80, mcIter: 30000, mut: 0.15 };
 
 function switchType(type) {
   currentType = type;
   document.getElementById("btn-mega").classList.toggle("active", type === 'mega');
   document.getElementById("btn-power").classList.toggle("active", type === 'power');
   document.getElementById("input-bonus").style.display = type === 'power' ? 'block' : 'none';
-  loadData();
+  
+  currentMetaParams = JSON.parse(localStorage.getItem('ai_meta_v7_' + currentType)) || { pos: 40, gap: 20, pair: 25, freq: 15, decay: 0.995, elite: 0.80, mcIter: 30000, mut: 0.15 };
+  updateWeightUI();
+  fetchDataAndPredict();
+}
+function updateWeightUI() {
+    let p = currentMetaParams;
+    document.getElementById("weight-score").innerText = `[ POS:${p.pos}% | GAP:${p.gap}% | PAIR:${p.pair}% ]\nDecay: ${parseFloat(p.decay).toFixed(3)} | MC: ${p.mcIter}`;
 }
 
+function updateStatus(text, isLoading) {
+    document.getElementById("status-bar").innerHTML = isLoading ? `<span class="loader"></span> ${text}` : text;
+}
 function pasteNumbers() {
   let val = document.getElementById("pasteInput").value;
   let parts = val.match(/\d+/g) || [];
@@ -102,222 +546,314 @@ function pasteNumbers() {
   if(currentType === 'power' && matches[6]) document.getElementById("input-bonus").value = parseInt(matches[6]);
 }
 
-async function saveData() {
-  let date = document.getElementById("date-picker").value;
-  let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
-  if(inputs.length < 6) return alert("Nhập đủ 6 số!");
-  await db.collection("vietlott_" + currentType).doc(date).set({ numbers: inputs.sort((a,b)=>a-b), bonus: parseInt(document.getElementById("input-bonus").value || 0) });
-  alert("💾 Lưu thành công!");
-}
-
-async function deleteData() {
-  let date = document.getElementById("date-picker").value;
-  if(confirm("Xoá ngày "+date+"?")) await db.collection("vietlott_" + currentType).doc(date).delete();
-}
-
 function getPrize(count, isJP2) {
   if (currentType === 'mega') {
-    if (count == 3) return "Trúng 3 số (30k)"; if (count == 4) return "Trúng 4 số (300k)"; if (count == 5) return "Trúng 5 số (10Tr)"; if (count == 6) return "JACKPOT!";
+    if (count == 3) return "3 số (30k)"; if (count == 4) return "4 số (300k)"; if (count == 5) return "5 số (10Tr)"; if (count == 6) return "JACKPOT!";
   } else {
-    if (count == 3) return "Trúng 3 số (50k)"; if (count == 4) return "Trúng 4 số (500k)"; if (count == 5 && !isJP2) return "Trúng 5 số (40Tr)"; if (count == 5 && isJP2) return "JACKPOT 2! 🏆"; if (count == 6) return "JACKPOT 1! 👑";
+    if (count == 3) return "3 số (50k)"; if (count == 4) return "4 số (500k)"; if (count == 5 && !isJP2) return "5 số (40Tr)"; if (count == 5 && isJP2) return "JACKPOT 2!"; if (count == 6) return "JACKPOT 1!";
   }
   return "";
 }
 
-// ==========================================================
-// 🚀 THUẬT TOÁN MỚI: CHUỖI MARKOV THEO VỊ TRÍ & POISSON
-// ==========================================================
-function generate(dataMap, sortedDates, targetDate) {
-  let maxLimit = currentType === 'mega' ? 45 : 55;
-  if (sortedDates.length === 0) return [Array.from({length:6}, (_,i)=>i+1), Array.from({length:6}, (_,i)=>i+2)];
-
-  let totalDraws = sortedDates.length;
-  let recentDraws = 30; // Trọng tâm 30 kỳ gần nhất để tính Poisson
-
-  // KHỞI TẠO BIẾN THỐNG KÊ
-  let overallFreq = {}; // Tần suất tổng thể 30 kỳ
-  let posFreq = Array(6).fill(0).map(() => ({})); // Tần suất độc lập tại từng vị trí (0-5)
-  let posChain = Array(5).fill(0).map(() => ({})); // Chuỗi nối: posChain[i][số_trước][số_sau]
-  
-  for(let i=1; i<=maxLimit; i++) overallFreq[i] = 0;
-
-  // QUÉT DỮ LIỆU ĐỂ HUẤN LUYỆN MODEL VỊ TRÍ
-  let startIdx = Math.max(0, totalDraws - recentDraws);
-  for (let d = startIdx; d < totalDraws; d++) {
-      let numbers = dataMap[sortedDates[d]].numbers;
-      if (!numbers || numbers.length !== 6) continue;
-
-      for (let i = 0; i < 6; i++) {
-          let num = numbers[i];
-          overallFreq[num]++;
-          posFreq[i][num] = (posFreq[i][num] || 0) + 1;
-
-          // Huấn luyện chuỗi Markov (Số B đi liền sau số A ở 2 vị trí kề nhau)
-          if (i > 0) {
-              let prevNum = numbers[i-1];
-              if (!posChain[i-1][prevNum]) posChain[i-1][prevNum] = {};
-              posChain[i-1][prevNum][num] = (posChain[i-1][prevNum][num] || 0) + 1;
-          }
-      }
-  }
-
-  // TÍNH TOÁN XÁC SUẤT POISSON CHO TỪNG SỐ
-  let poissonScores = {};
-  for(let i=1; i<=maxLimit; i++) {
-      let lambda = overallFreq[i] / recentDraws; // Số lần xuất hiện trung bình mỗi kỳ
-      if (lambda === 0) lambda = 0.001;
-      let probPoisson = 1 - Math.exp(-lambda); // Xác suất Poisson nổ ít nhất 1 lần
-      poissonScores[i] = probPoisson;
-  }
-
-  // HÀM XÂY DỰNG BỘ SỐ CHUẨN (Tối ưu theo từng vị trí)
-  function buildTicket(isVip2 = false) {
-      let ticket = [];
-      let currentMin = 1;
-
-      for (let i = 0; i < 6; i++) {
-          let bestScore = -9999;
-          let selectedNum = -1;
-          
-          // Giới hạn vùng an toàn cho từng vị trí để dãy số hợp lý
-          let safeMax = maxLimit - (5 - i);
-
-          for (let candidate = currentMin; candidate <= safeMax; candidate++) {
-              let score = 0;
-
-              // 1. Điểm Poisson tổng thể
-              score += poissonScores[candidate] * 10;
-
-              // 2. Điểm Tần suất chuẩn Vị trí (Rất quan trọng)
-              score += (posFreq[i][candidate] || 0) * 5;
-
-              // 3. Điểm Chuỗi Markov Liên kết (Nếu không phải vị trí đầu tiên)
-              if (i > 0) {
-                  let prevNum = ticket[i-1];
-                  score += (posChain[i-1][prevNum]?.[candidate] || 0) * 15; // Nối vị trí trọng số cao
-              }
-
-              // Làm đa dạng hóa cho VIP 2
-              if (isVip2) {
-                 score += (Math.random() * 5); // Thêm độ nhiễu nhỏ để vé 2 khác vé 1
-              }
-
-              if (score > bestScore) {
-                  bestScore = score;
-                  selectedNum = candidate;
-              }
-          }
-          ticket.push(selectedNum);
-          currentMin = selectedNum + 1; // Số tiếp theo phải lớn hơn số hiện tại
-      }
-      return ticket;
-  }
-
-  // Sinh 2 bộ số VIP
-  let vip1 = buildTicket(false);
-  let vip2 = buildTicket(true);
-  
-  // Đảm bảo VIP 2 khác VIP 1 ít nhất 2 số (fallback)
-  let loop = 0;
-  while(vip2.filter(x => !vip1.includes(x)).length < 2 && loop < 50) {
-      vip2 = buildTicket(true);
-      loop++;
-  }
-
-  return [vip1, vip2];
-}
-
-// Giữ nguyên Logic Cold Numbers
-function getColdNumbers(dataMap, sortedDates) {
-   let maxLimit = currentType === 'mega' ? 45 : 55;
-   let lastSeen = {};
-   for(let i = 1; i <= maxLimit; i++) lastSeen[i] = -1;
-   
-   sortedDates.forEach((d, idx) => {
-      let numbers = dataMap[d].numbers || [];
-      numbers.forEach(n => { lastSeen[n] = idx; });
-   });
-   
-   let totalDraws = sortedDates.length;
-   let coldArr = [];
-   for(let i = 1; i <= maxLimit; i++) {
-      let gap = lastSeen[i] === -1 ? totalDraws : (totalDraws - 1 - lastSeen[i]);
-      coldArr.push({ num: i, gap: gap });
-   }
-   coldArr.sort((a,b) => b.gap - a.gap);
-   return coldArr.slice(0, 5);
-}
-
-function loadData() {
-  db.collection("vietlott_" + currentType).onSnapshot((snapshot) => {
-    let dataMap = {}, sortedDates = [];
-    snapshot.forEach(doc => { dataMap[doc.id] = doc.data(); sortedDates.push(doc.id); });
-    sortedDates.sort();
-
-    // 1. DỰ ĐOÁN
-    let todayString = new Date().toISOString().slice(0, 10);
-    let currentPreds = generate(dataMap, sortedDates, todayString);
-    let html = "";
-    currentPreds.forEach((pair, idx) => {
-      html += `<div class="predict-item vip-style">
-        <div style="font-size:14px; margin-bottom:8px; font-weight:bold;">🔥 VIP ${idx + 1}:</div>
-        <div style="display:flex; gap:5px;">${pair.map(n => `<span class="ball">${n.toString().padStart(2,'0')}</span>`).join('')}</div>
-      </div>`;
-    });
-    document.getElementById("predict-list").innerHTML = html;
-
-    // 2. SỐ GAN
-    let coldNums = getColdNumbers(dataMap, sortedDates);
-    let coldHtml = `<div class="box"><h4>❄️ TOP 5 SỐ GAN (LÂU CHƯA VỀ)</h4>
-      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">`;
-    coldNums.forEach(c => {
-       coldHtml += `<div style="text-align:center;">
-          <span class="ball" style="background:#0c1220; border-color:#888; color:#888;">${c.num.toString().padStart(2,'0')}</span>
-          <div style="font-size:10px; color:#aaa; margin-top:4px;">${c.gap} kỳ</div>
-       </div>`;
-    });
-    coldHtml += `</div></div>`;
-    document.getElementById("cold-list-container").innerHTML = coldHtml;
-
-    // 3. KIỂM ĐỊNH LỊCH SỬ
+// Hàm Xóa Ghim Vé (Mới)
+window.removeLock = function(date) {
+    if(!confirm("Bạn muốn xóa bộ vé đã ghim của ngày " + date + "?")) return;
+    let savedPreds = JSON.parse(localStorage.getItem('saved_preds_v7_' + currentType)) || {};
+    let savedCorePreds = JSON.parse(localStorage.getItem('saved_preds_core_v7_' + currentType)) || {};
+    delete savedPreds[date]; 
+    delete savedCorePreds[date];
+    localStorage.setItem('saved_preds_v7_' + currentType, JSON.stringify(savedPreds));
+    localStorage.setItem('saved_preds_core_v7_' + currentType, JSON.stringify(savedCorePreds));
+    fetchDataAndPredict(); // Load lại giao diện
+};
+function renderHistory(historyArray, workerHistoryVips = {}, workerHistoryCoreVips = {}) {
     let histHtml = "";
+    let dataMap = {};
+    historyArray.forEach(d => dataMap[d.id] = d);
+    let sortedDates = historyArray.map(d => d.id);
+    let savedPreds = JSON.parse(localStorage.getItem('saved_preds_v7_' + currentType)) || {};
+    let savedCorePreds = JSON.parse(localStorage.getItem('saved_preds_core_v7_' + currentType)) || {}; 
+    
     [...sortedDates].reverse().forEach((date) => {
-      let actualData = dataMap[date];
-      let pastDates = sortedDates.filter(d => d < date);
-      let pastPreds = pastDates.length > 0 ? generate(dataMap, pastDates, date) : [];
-      
-      let matchCounts = pastPreds.map(predBalls => {
-          let count = actualData.numbers.filter(n => predBalls.includes(n)).length;
-          let isJP2 = false;
-          if (currentType === 'power' && count === 5) {
-              let unmatchedUserBalls = predBalls.filter(n => !actualData.numbers.includes(n));
-              if (unmatchedUserBalls.includes(actualData.bonus)) isJP2 = true;
-          }
-          return { count: count, isJP2: isJP2, userBalls: predBalls };
-      });
-      
-      let bestTicketObj = matchCounts.reduce((max, current) => {
-          if(current.count > max.count) return current;
-          if(current.count === max.count && current.isJP2) return current;
-          return max;
-      }, {count: -1, isJP2: false, userBalls: []});
-      
-      let matchText = pastPreds.length > 0 ? getPrize(bestTicketObj.count, bestTicketObj.isJP2) : "";
-      
-      histHtml += `<div style="padding:8px 0; border-bottom:1px solid #2a3a5a;">
-        <div style="font-size:11px; color:#888;">📅 ${date} <span class="win-tag">${matchText}</span></div>
-        <div style="display:flex; gap:4px; margin-top:4px;">
-          ${actualData.numbers.map(n => {
-            let isMatched = bestTicketObj.userBalls.includes(n);
-            return `<span class="ball ${isMatched ? 'matched' : ''}" style="width:26px; height:26px; font-size:11px;">${n.toString().padStart(2,'0')}</span>`;
-          }).join('')}
-          ${actualData.bonus ? `<span class="ball ${bestTicketObj.isJP2 && bestTicketObj.userBalls.includes(actualData.bonus) ? 'matched' : ''}" style="width:26px; height:26px; font-size:11px; border-color:#ff1744;">${actualData.bonus.toString().padStart(2,'0')}</span>` : ''}
-        </div>
-      </div>`;
+        let actualData = dataMap[date];
+        let pastPreds = [];
+        let pastCorePreds = []; 
+        
+        if (savedPreds[date] && savedPreds[date].length > 0) pastPreds = savedPreds[date];
+        else if (workerHistoryVips[date]) pastPreds = workerHistoryVips[date];
+
+        if (savedCorePreds[date] && savedCorePreds[date].length > 0) pastCorePreds = savedCorePreds[date];
+        else if (workerHistoryCoreVips && workerHistoryCoreVips[date]) pastCorePreds = workerHistoryCoreVips[date];
+
+        let count1 = 0, count2 = 0;
+        let isJP2_1 = false, isJP2_2 = false;
+        
+        if (pastPreds.length > 0) {
+            count1 = actualData.numbers.filter(n => pastPreds[0].includes(n)).length;
+            if (currentType === 'power' && count1 === 5 && actualData.bonus && pastPreds[0].includes(actualData.bonus)) isJP2_1 = true;
+        }
+        if (pastPreds.length > 1) {
+            count2 = actualData.numbers.filter(n => pastPreds[1].includes(n)).length;
+            if (currentType === 'power' && count2 === 5 && actualData.bonus && pastPreds[1].includes(actualData.bonus)) isJP2_2 = true;
+        }
+      let matchCounts = [
+            { count: count1, isJP2: isJP2_1, userBalls: pastPreds.length > 0 ? pastPreds[0] : [] },
+            { count: count2, isJP2: isJP2_2, userBalls: pastPreds.length > 1 ? pastPreds[1] : [] }
+        ];
+        
+        let bestTicketObj = matchCounts.reduce((max, current) => {
+            if(current.count > max.count) return current;
+            if(current.count === max.count && current.isJP2) return current;
+            return max;
+        }, {count: -1, isJP2: false, userBalls: []});
+        
+        let coreCount = 0; let isJP2_Core = false;
+        let coreTicket = pastCorePreds.length > 0 ? pastCorePreds[0] : [];
+        if (coreTicket.length > 0) {
+             coreCount = actualData.numbers.filter(n => coreTicket.includes(n)).length;
+             if (currentType === 'power' && coreCount === 5 && actualData.bonus && coreTicket.includes(actualData.bonus)) isJP2_Core = true;
+        }
+
+        let displayMatchText = pastPreds.length > 0 ? getPrize(bestTicketObj.count, bestTicketObj.isJP2) : "";
+        if (coreCount > bestTicketObj.count || (coreCount === bestTicketObj.count && isJP2_Core && !bestTicketObj.isJP2)) {
+            displayMatchText = coreTicket.length > 0 ? getPrize(coreCount, isJP2_Core) : displayMatchText;
+        }
+
+        let subText = "";
+        if(pastPreds.length > 0 || coreTicket.length > 0) {
+            let txt1 = pastPreds.length > 0 ? `Meta VIP1: ${count1} số${isJP2_1 ? '(+B)' : ''}` : "";
+            let txt2 = pastPreds.length > 1 ? ` - Meta VIP2: ${count2} số${isJP2_2 ? '(+B)' : ''}` : "";
+            let txtCore = coreTicket.length > 0 ? ` | Gốc VIP1: ${coreCount} số${isJP2_Core ? '(+B)' : ''}` : "";
+            subText = `<div style="font-size:11px; color:#888; margin-top:8px; font-style:italic; text-align:center;">(Chi tiết: ${txt1}${txt2}${txtCore})</div>`;
+        }
+        
+        let actualBallsHtml = actualData.numbers.map(n => {
+            let isMatched = bestTicketObj.userBalls.includes(n) || coreTicket.includes(n);
+            return `<span class="ball-xs ${isMatched ? 'matched' : ''}">${n.toString().padStart(2,'0')}</span>`;
+        }).join('');
+        if(actualData.bonus) {
+            let isBMatched = (bestTicketObj.isJP2 && bestTicketObj.userBalls.includes(actualData.bonus)) || (isJP2_Core && coreTicket.includes(actualData.bonus));
+            actualBallsHtml += `<span class="ball-xs ${isBMatched ? 'matched' : ''}" style="border-color:#ff1744;">${actualData.bonus.toString().padStart(2,'0')}</span>`;
+        }
+
+        let predictedBallsHtml = bestTicketObj.userBalls.length > 0 ? bestTicketObj.userBalls.map(n => {
+            let isMatched = actualData.numbers.includes(n) || (actualData.bonus && n === actualData.bonus && bestTicketObj.isJP2);
+            return `<span class="ball-xs ${isMatched ? 'matched' : ''}">${n.toString().padStart(2,'0')}</span>`;
+        }).join('') : `<span style="font-size:10px; color:#555;">(Đang xử lý...)</span>`;
+
+        let predictedCoreBallsHtml = coreTicket.length > 0 ? coreTicket.map(n => {
+            let isMatched = actualData.numbers.includes(n) || (actualData.bonus && n === actualData.bonus && isJP2_Core);
+            return `<span class="ball-xs ${isMatched ? 'matched' : ''}">${n.toString().padStart(2,'0')}</span>`;
+        }).join('') : `<span style="font-size:10px; color:#555;">(Đang xử lý...)</span>`;
+        
+        // Hiện nút Xóa Ghim
+        let pinnedText = (savedPreds[date] || savedCorePreds[date]) 
+            ? `<span style="color:#00e676; font-size:10px; cursor:pointer;" onclick="removeLock('${date}')">(Khớp vé đã mua ✖)</span>` 
+            : '';
+
+        histHtml += `<div style="padding:10px 0; border-bottom:1px solid #2a3a5a;">
+          <div style="font-size:12px; color:#888; margin-bottom:5px;">📅 ${date} ${pinnedText}
+            <span style="float:right; color:var(--win); font-weight:bold;">${displayMatchText}</span>
+          </div>
+          
+          <div class="hist-container" style="align-items: stretch;">
+              <div class="hist-col" style="flex: 1; justify-content: center;">
+                  <div class="hist-title">Thực Tế</div>
+                  <div class="hist-balls">${actualBallsHtml}</div>
+              </div>
+              
+              <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                  <div class="hist-col" style="flex: 1; justify-content: center; padding: 4px 2px;">
+                      <div class="hist-title">AI Meta</div>
+                      <div class="hist-balls">${predictedBallsHtml}</div>
+                  </div>
+                  <div class="hist-col" style="flex: 1; justify-content: center; padding: 4px 2px;">
+                      <div class="hist-title">AI Gốc (VIP 1)</div>
+                      <div class="hist-balls">${predictedCoreBallsHtml}</div>
+                  </div>
+              </div>
+          </div>
+          ${subText}
+        </div>`;
     });
     document.getElementById("history-list").innerHTML = histHtml;
-  });
 }
+
+function triggerSilentOptimizerIfNeeded(historyLength) {
+    let lastOptLength = parseInt(localStorage.getItem('last_opt_len_v7_' + currentType)) || 0;
+    if (historyLength > lastOptLength) {
+        aiWorker.postMessage({ action: 'optimize_silent', history: globalHistoryArray, type: currentType });
+    }
+}
+
+function fetchDataAndPredict() {
+    updateStatus("Đang tải dữ liệu...", true);
+    document.getElementById("predict-list").style.display = 'none';
+
+    db.collection("vietlott_" + currentType).orderBy(firebase.firestore.FieldPath.documentId()).onSnapshot((snapshot) => {
+        globalHistoryArray = [];
+        snapshot.forEach(doc => { 
+            globalHistoryArray.push({ id: doc.id, ...doc.data() });
+        });
+
+        if (globalHistoryArray.length === 0) {
+            updateStatus("Chưa có dữ liệu.", false);
+            return;
+        }
+        renderHistory(globalHistoryArray);
+        triggerSilentOptimizerIfNeeded(globalHistoryArray.length);
+
+        updateStatus(`Đang sinh vé kỳ tới...`, true);
+        aiWorker.postMessage({
+            action: 'generate',
+            history: globalHistoryArray,
+            type: currentType,
+            metaParams: currentMetaParams
+        });
+    });
+}
+function runAutoOptimizer() {
+    if(globalHistoryArray.length < 120) return alert("Cần ít nhất 120 kỳ dữ liệu để AI Meta phân tích.");
+    window.forceNewPrediction = true; 
+    
+    document.getElementById("btn-optimize").disabled = true;
+    updateStatus("Đang tiến hóa siêu tham số V7.5 & Walk-forward Backtest (Vui lòng đợi)...", true);
+    aiWorker.postMessage({ action: 'optimize', history: globalHistoryArray, type: currentType });
+}
+
+aiWorker.onmessage = function(e) {
+    const data = e.data;
+    if (data.action === 'result_generate') {
+        let lastDate = globalHistoryArray.length > 0 ? globalHistoryArray[globalHistoryArray.length - 1].id : "init";
+        let cacheKey = 'cached_prediction_v7_' + currentType + '_' + lastDate;
+        let cachedData = localStorage.getItem(cacheKey);
+
+        if (cachedData && !window.forceNewPrediction) {
+            let parsed = JSON.parse(cachedData);
+            data.coreVips = parsed.coreVips;
+            data.metaVips = parsed.metaVips;
+            data.judgeResults = parsed.judgeResults;
+        } else {
+            localStorage.setItem(cacheKey, JSON.stringify({
+                coreVips: data.coreVips,
+                metaVips: data.metaVips,
+                judgeResults: data.judgeResults
+            }));
+            window.forceNewPrediction = false;
+        }
+        currentDisplayedVIPs = [data.metaVips[0].ticket, data.metaVips[1].ticket];
+        currentDisplayedCoreVIPs = [data.coreVips[0].ticket];
+        
+        renderPredictions(data.coreVips, data.metaVips, data.judgeResults);
+        renderHistory(globalHistoryArray, data.historyVips, data.historyCoreVips);
+        updateStatus("Dự đoán hoàn tất.", false);
+    } 
+    else if (data.action === 'result_optimize' || data.action === 'result_optimize_silent') {
+        let proposedParams = data.result.metaParams;
+        currentMetaParams = proposedParams;
+        localStorage.setItem('ai_meta_v7_' + currentType, JSON.stringify(currentMetaParams));
+        localStorage.setItem('last_opt_len_v7_' + currentType, globalHistoryArray.length); 
+        updateWeightUI();
+        
+        document.getElementById("btn-optimize").disabled = false;
+        if(data.action === 'result_optimize') updateStatus("Hệ thống Meta đã tối ưu thành công!", false);
+        else updateStatus("AI đã tự học ngầm xong!", false);
+        
+        aiWorker.postMessage({ action: 'generate', history: globalHistoryArray, type: currentType, metaParams: currentMetaParams });
+    }
+};
+
+function renderPredictions(coreVips, metaVips, j) {
+    document.getElementById("predict-list").style.display = 'block';
+    
+    let buildTicketHtml = (vip, idx, color) => {
+        let score = Math.round(vip.score);
+        return `
+        <div class="ticket-box">
+            <div class="ticket-lbl" style="color:${color}">VIP ${idx+1} (${score}đ)</div>
+            <div class="ticket-row">
+                ${vip.ticket.map(n => `<span class="ball-sm" style="border-color:${color}; color:${color}">${n.toString().padStart(2,'0')}</span>`).join('')}
+            </div>
+        </div>`;
+    };
+
+    let html = `
+    <div class="three-col-container">
+        <div class="col-item">
+            <div class="col-title" style="color:var(--accent)">AI GỐC (CORE)</div>
+            ${buildTicketHtml(coreVips[0], 0, 'var(--accent)')}
+            ${buildTicketHtml(coreVips[1], 1, 'var(--accent)')}
+        </div>
+        <div class="col-item">
+            <div class="col-title" style="color:var(--success)">AI META</div>
+            ${buildTicketHtml(metaVips[0], 0, 'var(--success)')}
+            ${buildTicketHtml(metaVips[1], 1, 'var(--success)')}
+        </div>
+        <div class="col-item">
+            <div class="col-title" style="color:var(--judge)">TRỌNG TÀI</div>
+            <table class="judge-sm-table">
+                <tr><th>Tiêu chí</th><th>Gốc</th><th>Meta</th></tr>
+                <tr><td>Trúng TB</td><td>${j.core.avgHits}</td><td style="color:var(--success)">${j.meta.avgHits}</td></tr>
+                <tr><td>Tỉ lệ vé ≥3</td><td>${j.core.rate3}%</td><td style="color:var(--success)">${j.meta.rate3}%</td></tr>
+                <tr><td>ROI</td>
+                    <td style="color:${j.core.roi > 0 ? 'var(--success)' : 'var(--accent)'}">${j.core.roi}%</td>
+                    <td style="color:${j.meta.roi > 0 ? 'var(--success)' : 'var(--accent)'}">${j.meta.roi}%</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    `;
+    document.getElementById("vip-container").innerHTML = html;
+}
+
+// Hàm ghim vé thủ công (Mới)
+window.lockCurrentPrediction = function() {
+    let dateStr = prompt("Bạn muốn ghim bộ vé này cho ngày quay nào? (YYYY-MM-DD):", document.getElementById("date-picker").value);
+    if(!dateStr) return;
+    
+    let savedPreds = JSON.parse(localStorage.getItem('saved_preds_v7_' + currentType)) || {};
+    let savedCorePreds = JSON.parse(localStorage.getItem('saved_preds_core_v7_' + currentType)) || {};
+    
+    savedPreds[dateStr] = currentDisplayedVIPs;
+    savedCorePreds[dateStr] = currentDisplayedCoreVIPs;
+    
+    localStorage.setItem('saved_preds_v7_' + currentType, JSON.stringify(savedPreds));
+    localStorage.setItem('saved_preds_core_v7_' + currentType, JSON.stringify(savedCorePreds));
+    
+    alert("📌 Đã ghim thành công vé VIP cho ngày " + dateStr + "! Lịch sử sẽ đối chiếu với bộ vé này.");
+    fetchDataAndPredict(); 
+};
+
+// Đã loại bỏ logic ghi đè vé vào hàm lưu kết quả Firebase
+async function saveData() {
+    let date = document.getElementById("date-picker").value;
+    let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
+    
+    if(inputs.length < 6) return alert("Vui lòng nhập đủ 6 số!");
+    let maxVal = currentType === 'mega' ? 45 : 55;
+    if(inputs.some(num => num < 1 || num > maxVal)) return alert(`Lỗi: Các số phải nằm trong khoảng từ 1 đến ${maxVal}!`);
+    if(new Set(inputs).size < 6) return alert("Lỗi: Các số nhập vào không được trùng nhau!");
+
+    await db.collection("vietlott_" + currentType).doc(date).set({ 
+        numbers: inputs.sort((a,b)=>a-b), 
+        bonus: parseInt(document.getElementById("input-bonus").value || 0) 
+    });
+    
+    clearInputs(); 
+    alert("💾 Đã tải kết quả xổ số lên cơ sở dữ liệu thành công!");
+}
+
+async function deleteData() {
+    let date = document.getElementById("date-picker").value;
+    if(!date) return alert("Vui lòng chọn ngày cần xoá!");
+    
+    if(confirm("Bạn có chắc chắn muốn xoá kết quả xổ số ngày " + date + "?")) {
+        await db.collection("vietlott_" + currentType).doc(date).delete();
+        alert("🗑 Đã xoá thành công kết quả ngày " + date + "!");
+    }
+}
+
+updateWeightUI();
 switchType('mega');
 </script>
 </body>
