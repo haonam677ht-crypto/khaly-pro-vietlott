@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Khaly Pro Vietlott - AI Pipeline 7.6 (Tách luồng Ghim Vé)</title>
+<title>Khaly Pro Vietlott - AI Pipeline 7.7 (Fix Timezone & Đầy đủ tính năng)</title>
 <style>
   :root { --bg: #090e1a; --card: #151d30; --accent: #ff1744; --text: #e0e0e0; --win: #ffeb3b; --success: #00e676; --judge: #29b6f6; --memory: #ab47bc; }
   body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 15px; margin: 0; font-size: 14px; }
@@ -65,7 +65,7 @@
 </head>
 <body>
 <div class="container">
-  <h2>Khaly Pro Vietlott 7.6</h2>
+  <h2>Khaly Pro Vietlott 7.7</h2>
   
   <div id="schedule-box" style="background:#1a2538; border:1px solid var(--accent); padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; color:var(--accent); font-weight:bold;"></div>
 
@@ -146,7 +146,12 @@ function updateSchedule() {
 }
 updateSchedule();
 
-document.getElementById("date-picker").value = new Date().toISOString().slice(0, 10);
+// FIX MÚI GIỜ VIỆT NAM (UTC+7) CHO Ô CHỌN NGÀY
+let now = new Date();
+let tzOffset = now.getTimezoneOffset() * 60000;
+let localISODate = new Date(now - tzOffset).toISOString().slice(0, 10);
+document.getElementById("date-picker").value = localISODate;
+
 const inputsDiv = document.getElementById("inputs-6");
 for(let i=0; i<6; i++){ 
     let input = document.createElement("input"); 
@@ -243,7 +248,6 @@ const workerLogic = `
               }
           }
       });
-      
       for(let i=1; i<=maxLimit; i++) { 
           gapMatrix[i] = lastSeen[i] === -1 ? totalDraws : (totalDraws - 1 - lastSeen[i]); 
           for(let p=0; p<6; p++) {
@@ -297,8 +301,8 @@ const workerLogic = `
       let candidates = [];
       let maxLimit = matrices.maxLimit;
       let random = splitmix32(cyrb53(seedString)); 
-
-         let iters = metaParams.mcIter || CORE_DEFAULTS.mcIter;
+      
+      let iters = metaParams.mcIter || CORE_DEFAULTS.mcIter;
       let eliteRate = metaParams.elite || CORE_DEFAULTS.elite;
 
       let ranked = [];
@@ -526,7 +530,7 @@ function switchType(type) {
   updateWeightUI();
   fetchDataAndPredict();
 }
-function updateWeightUI() {
+  function updateWeightUI() {
     let p = currentMetaParams;
     document.getElementById("weight-score").innerText = `[ POS:${p.pos}% | GAP:${p.gap}% | PAIR:${p.pair}% ]\nDecay: ${parseFloat(p.decay).toFixed(3)} | MC: ${p.mcIter}`;
 }
@@ -555,7 +559,6 @@ function getPrize(count, isJP2) {
   return "";
 }
 
-// Hàm Xóa Ghim Vé (Mới)
 window.removeLock = function(date) {
     if(!confirm("Bạn muốn xóa bộ vé đã ghim của ngày " + date + "?")) return;
     let savedPreds = JSON.parse(localStorage.getItem('saved_preds_v7_' + currentType)) || {};
@@ -564,8 +567,9 @@ window.removeLock = function(date) {
     delete savedCorePreds[date];
     localStorage.setItem('saved_preds_v7_' + currentType, JSON.stringify(savedPreds));
     localStorage.setItem('saved_preds_core_v7_' + currentType, JSON.stringify(savedCorePreds));
-    fetchDataAndPredict(); // Load lại giao diện
+    fetchDataAndPredict();
 };
+
 function renderHistory(historyArray, workerHistoryVips = {}, workerHistoryCoreVips = {}) {
     let histHtml = "";
     let dataMap = {};
@@ -596,7 +600,8 @@ function renderHistory(historyArray, workerHistoryVips = {}, workerHistoryCoreVi
             count2 = actualData.numbers.filter(n => pastPreds[1].includes(n)).length;
             if (currentType === 'power' && count2 === 5 && actualData.bonus && pastPreds[1].includes(actualData.bonus)) isJP2_2 = true;
         }
-      let matchCounts = [
+
+        let matchCounts = [
             { count: count1, isJP2: isJP2_1, userBalls: pastPreds.length > 0 ? pastPreds[0] : [] },
             { count: count2, isJP2: isJP2_2, userBalls: pastPreds.length > 1 ? pastPreds[1] : [] }
         ];
@@ -646,7 +651,6 @@ function renderHistory(historyArray, workerHistoryVips = {}, workerHistoryCoreVi
             return `<span class="ball-xs ${isMatched ? 'matched' : ''}">${n.toString().padStart(2,'0')}</span>`;
         }).join('') : `<span style="font-size:10px; color:#555;">(Đang xử lý...)</span>`;
         
-        // Hiện nút Xóa Ghim
         let pinnedText = (savedPreds[date] || savedCorePreds[date]) 
             ? `<span style="color:#00e676; font-size:10px; cursor:pointer;" onclick="removeLock('${date}')">(Khớp vé đã mua ✖)</span>` 
             : '';
@@ -678,7 +682,6 @@ function renderHistory(historyArray, workerHistoryVips = {}, workerHistoryCoreVi
     });
     document.getElementById("history-list").innerHTML = histHtml;
 }
-
 function triggerSilentOptimizerIfNeeded(historyLength) {
     let lastOptLength = parseInt(localStorage.getItem('last_opt_len_v7_' + currentType)) || 0;
     if (historyLength > lastOptLength) {
@@ -717,7 +720,7 @@ function runAutoOptimizer() {
     window.forceNewPrediction = true; 
     
     document.getElementById("btn-optimize").disabled = true;
-    updateStatus("Đang tiến hóa siêu tham số V7.5 & Walk-forward Backtest (Vui lòng đợi)...", true);
+    updateStatus("Đang tiến hóa siêu tham số & Walk-forward Backtest (Vui lòng đợi)...", true);
     aiWorker.postMessage({ action: 'optimize', history: globalHistoryArray, type: currentType });
 }
 
@@ -777,6 +780,15 @@ function renderPredictions(coreVips, metaVips, j) {
         </div>`;
     };
 
+    let metaWin = false;
+    if (parseFloat(j.meta.roi) > parseFloat(j.core.roi)) {
+        metaWin = true;
+    } else if (parseFloat(j.meta.roi) === parseFloat(j.core.roi) && parseFloat(j.meta.avgHits) >= parseFloat(j.core.avgHits)) {
+        metaWin = true;
+    }
+    let winText = metaWin ? '✓ Meta hiệu quả hơn' : '✓ Gốc hiệu quả hơn';
+    let winColor = metaWin ? 'var(--success)' : 'var(--accent)';
+
     let html = `
     <div class="three-col-container">
         <div class="col-item">
@@ -800,13 +812,16 @@ function renderPredictions(coreVips, metaVips, j) {
                     <td style="color:${j.meta.roi > 0 ? 'var(--success)' : 'var(--accent)'}">${j.meta.roi}%</td>
                 </tr>
             </table>
+            <div style="font-size:8px; color:#888; text-align:center; margin-top:4px; font-style:italic;">
+                *Walk-forward Test. <br/>
+                <strong style="color: ${winColor}">${winText}</strong>
+            </div>
         </div>
     </div>
     `;
     document.getElementById("vip-container").innerHTML = html;
 }
 
-// Hàm ghim vé thủ công (Mới)
 window.lockCurrentPrediction = function() {
     let dateStr = prompt("Bạn muốn ghim bộ vé này cho ngày quay nào? (YYYY-MM-DD):", document.getElementById("date-picker").value);
     if(!dateStr) return;
@@ -824,7 +839,6 @@ window.lockCurrentPrediction = function() {
     fetchDataAndPredict(); 
 };
 
-// Đã loại bỏ logic ghi đè vé vào hàm lưu kết quả Firebase
 async function saveData() {
     let date = document.getElementById("date-picker").value;
     let inputs = [...document.querySelectorAll("#inputs-6 input")].map(i => parseInt(i.value)).filter(x => !isNaN(x));
